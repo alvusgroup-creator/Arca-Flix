@@ -1,0 +1,71 @@
+import "server-only"
+import { createHash } from "node:crypto"
+import { isDemoMode } from "@/lib/env"
+import { isBunnyConfigured, serverEnv } from "@/lib/env.server"
+
+export interface VideoSource {
+  /** URL HLS (.m3u8) pronta para o player. */
+  src: string
+  /** Legendas WebVTT opcionais. */
+  captions: { src: string; label: string; lang: string }[]
+}
+
+const TOKEN_TTL_SECONDS = 60 * 60 * 4
+
+/**
+ * Assina um diretório inteiro da CDN do Bunny (token authentication), para que
+ * a playlist HLS e todos os segmentos herdem o token.
+ * Documentação: https://docs.bunny.net/docs/cdn-token-authentication
+ */
+function signDirectory(videoId: string) {
+  const host = serverEnv.bunnyCdnHost
+  const tokenPath = `/${videoId}/`
+  const expires = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS
+  const hashable = `${serverEnv.bunnyTokenKey}${tokenPath}${expires}token_path=${tokenPath}`
+  const token = createHash("sha256")
+    .update(hashable)
+    .digest("base64")
+    .replace(/\n/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "")
+  return `https://${host}/bcdn_token=${token}&expires=${expires}&token_path=${encodeURIComponent(tokenPath)}${tokenPath}`
+}
+
+/**
+ * Resolve a fonte de reprodução de um vídeo do Bunny Stream.
+ * Só deve ser chamada depois de verificar sessão e assinatura.
+ */
+export function getVideoSource(videoId: string | null): VideoSource | null {
+  if (!videoId) return null
+
+  if (!isBunnyConfigured) {
+    // Modo demonstração: stream público de teste.
+    return isDemoMode || videoId === "demo" ? { src: serverEnv.demoVideoUrl, captions: [] } : null
+  }
+
+  const base = serverEnv.bunnyTokenKey
+    ? signDirectory(videoId)
+    : `https://${serverEnv.bunnyCdnHost}/${videoId}/`
+
+  return {
+    src: `${base}playlist.m3u8`,
+    captions: [{ src: `${base}captions/pt.vtt`, label: "Português", lang: "pt" }],
+  }
+}
+
+/** Metadados de um vídeo na API do Bunny Stream (usado no admin). */
+export async function fetchBunnyVideo(videoId: string) {
+  if (!serverEnv.bunnyApiKey || !serverEnv.bunnyLibraryId) return null
+  const res = await fetch(
+    `https://video.bunnycdn.com/library/${serverEnv.bunnyLibraryId}/videos/${videoId}`,
+    { headers: { AccessKey: serverEnv.bunnyApiKey, accept: "application/json" }, cache: "no-store" }
+  )
+  if (!res.ok) return null
+  const data = (await res.json()) as { length: number; thumbnailFileName: string; title: string }
+  return {
+    title: data.title,
+    durationSeconds: data.length,
+    thumbnailUrl: `https://${serverEnv.bunnyCdnHost}/${videoId}/${data.thumbnailFileName}`,
+  }
+}

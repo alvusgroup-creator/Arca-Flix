@@ -1,0 +1,286 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   Arca Flix — design tokens
+   Claro e fofo: céu lilás-pastel, cartões brancos, uva (roxo da logo) para
+   ação/seleção/progresso, lilás para destaques, sol (bico da pomba) e
+   rosa/céu como toques alegres pontuais.
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-nunito);
+  --font-heading: var(--font-fredoka);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Paleta da marca */
+  --color-grape-900: #2a1248;
+  --color-grape-800: #3b0e5c;
+  --color-grape-700: #561478;
+  --color-grape-600: #7b2fbe;
+  --color-grape-500: #9146e0;
+  --color-lilac-500: #b47aea;
+  /* lilac-400: texto/ícones de destaque (contraste AA sobre fundo claro) */
+  --color-lilac-400: #8a3fd6;
+  --color-lilac-200: #dcc6ff;
+  --color-lilac-100: #efe5ff;
+  --color-sun-400: #ffa94d;
+  --color-sun-100: #fff1e0;
+  --color-bubblegum-300: #ffb3d9;
+  --color-bubblegum-100: #ffe6f2;
+  --color-sky-300: #9fd8ff;
+  --color-sky-100: #e3f4ff;
+  --color-ink: #2a1248;
+  --color-surface-0: #faf6ff;
+  --color-surface-1: #ffffff;
+  --color-surface-2: #f3ecff;
+  --color-surface-3: #e8dcff;
+  --color-cloud: #f4eeff;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Raios: 12 / 16 / 20 */
+  /* Raios contidos: arredondado, mas sem "cara de bolha". */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-4xl: 20px;
+
+  /* Movimento: 150–300ms */
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-up: fade-up 300ms var(--ease-soft) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-jelly: jelly 450ms var(--ease-soft);
+  --animate-float: float 6s ease-in-out infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @keyframes jelly {
+    0% { transform: scale(1, 1); }
+    30% { transform: scale(1.04, 0.97); }
+    55% { transform: scale(0.98, 1.02); }
+    75% { transform: scale(1.01, 0.995); }
+    100% { transform: scale(1, 1); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+:root {
+  color-scheme: light;
+  --background: #faf6ff;
+  --foreground: #2a1248;
+  --card: #ffffff;
+  --card-foreground: #2a1248;
+  --popover: #ffffff;
+  --popover-foreground: #2a1248;
+  --primary: #7b2fbe;
+  --primary-foreground: #ffffff;
+  --secondary: #f1e8ff;
+  --secondary-foreground: #2a1248;
+  --muted: #f1e8ff;
+  --muted-foreground: #6c5a8a;
+  --accent: #efe5ff;
+  --accent-foreground: #2a1248;
+  --destructive: #d92d5b;
+  --border: rgb(123 47 190 / 0.12);
+  --input: rgb(123 47 190 / 0.2);
+  --ring: #9146e0;
+  --radius: 10px;
+
+  /* Layout */
+  --sidebar-w: 0px;
+  --topbar-h: 64px;
+  --mobile-nav-h: 64px;
+  --page-x: 16px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --page-x: 32px;
+    --sidebar-w: 84px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-w: 240px;
+  }
+}
+@media (min-width: 1280px) {
+  :root {
+    --page-x: 48px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+    text-rendering: optimizeLegibility;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading tracking-tight;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-lilac-400);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-grape-600);
+    color: #fff;
+  }
+}
+
+@layer utilities {
+  .page-x {
+    padding-inline: var(--page-x);
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  /* Gradientes para leitura sobre imagens */
+  .scrim-left {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-0) 0%,
+      rgb(250 246 255 / 0.9) 30%,
+      rgb(250 246 255 / 0.35) 62%,
+      transparent 100%
+    );
+  }
+  .scrim-bottom {
+    background: linear-gradient(
+      0deg,
+      var(--color-surface-0) 0%,
+      rgb(250 246 255 / 0.6) 35%,
+      transparent 70%
+    );
+  }
+  /* Destaque de plano: contorno, sem brilho */
+  .glow-lilac {
+    box-shadow: 0 0 0 2px var(--color-grape-500);
+  }
+  /* Profundidade mínima: contorno fino + sombra quase imperceptível */
+  .shadow-soft {
+    box-shadow: 0 0 0 1px rgb(42 18 72 / 0.07), 0 1px 2px rgb(42 18 72 / 0.05);
+  }
+  .shadow-soft-lg {
+    box-shadow: 0 0 0 1px rgb(42 18 72 / 0.08), 0 8px 24px -12px rgb(42 18 72 / 0.18);
+  }
+  /* Véu escuro sobre fotos: legibilidade do texto branco */
+  .veil {
+    background: linear-gradient(180deg, rgb(20 8 36 / 0.35) 0%, rgb(20 8 36 / 0.55) 55%, rgb(20 8 36 / 0.85) 100%);
+  }
+  @media (min-width: 768px) {
+    .veil-side {
+      background: linear-gradient(90deg, rgb(20 8 36 / 0.88) 0%, rgb(20 8 36 / 0.6) 40%, rgb(20 8 36 / 0.15) 75%, rgb(20 8 36 / 0.05) 100%);
+    }
+  }
+  /* Entrada suave ao rolar (navegadores com scroll-driven animations) */
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+  /* Hover gelatinoso subtil */
+  .hover-jelly:hover {
+    animation: var(--animate-jelly);
+  }
+  .text-lilac-gradient {
+    background: linear-gradient(100deg, #7b2fbe 0%, #b47aea 55%, #ff8cc6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-2) 0%,
+      var(--color-surface-3) 50%,
+      var(--color-surface-2) 100%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+/* Keyframes usados por utilitários próprios (fora do @theme para serem sempre emitidos) */
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes draw {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
