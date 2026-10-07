@@ -30,7 +30,7 @@ export default async function MyListPage() {
       ) : (
         <EmptyState
           icon={Bookmark}
-          title="A sua lista está vazia"
+          title="Sua lista está vazia"
           description="Toque em “Minha lista” em qualquer título para guardá-lo aqui."
           action={
             <Link href="/browse" className={buttonVariants()}>

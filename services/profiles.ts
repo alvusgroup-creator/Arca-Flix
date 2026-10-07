@@ -168,3 +168,18 @@ export async function removeProfile(userId: string, profileId: string) {
     .eq("user_id", userId)
   if (error) throw error
 }
+
+/**
+ * Pode mexer em perfis, configurações e assinatura? Só um perfil adulto —
+ * a menos que nenhum perfil tenha PIN (aí não há nada a proteger).
+ */
+export function canManageFamily(profiles: ViewerProfile[], active: ViewerProfile | null) {
+  if (active?.kind === "adult") return true
+  return !profiles.some((p) => p.kind === "adult" && p.hasPin)
+}
+
+export async function requireFamilyManager() {
+  const account = await requireAccount()
+  const [profiles, active] = await Promise.all([listProfiles(account.id), getActiveProfile()])
+  return { account, allowed: canManageFamily(profiles, active) }
+}

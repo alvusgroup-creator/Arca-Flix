@@ -20,7 +20,16 @@ import { avatarSrc } from "@/features/profiles/avatars"
 import { selectProfile } from "@/features/profiles/actions"
 import type { ViewerProfile } from "@/types"
 
-export function ProfileMenu({ profile, profiles }: { profile: ViewerProfile; profiles: ViewerProfile[] }) {
+export function ProfileMenu({
+  profile,
+  profiles,
+  canManage,
+}: {
+  profile: ViewerProfile
+  profiles: ViewerProfile[]
+  /** Perfil infantil: só "trocar perfil" (sem conta, assinatura ou sair) */
+  canManage: boolean
+}) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const others = profiles.filter((p) => p.id !== profile.id)
@@ -59,7 +68,13 @@ export function ProfileMenu({ profile, profiles }: { profile: ViewerProfile; pro
           </DropdownMenuLabel>
           {others.map((p) => (
             <DropdownMenuItem key={p.id} onClick={() => switchTo(p)} className="gap-3 rounded-lg px-2 py-2">
-              <Image src={avatarSrc(p.avatar)} alt="" width={28} height={28} className="size-7 rounded-md object-cover" />
+              <Image
+                src={avatarSrc(p.avatar)}
+                alt=""
+                width={28}
+                height={28}
+                className="size-7 rounded-md object-cover"
+              />
               <span className="truncate">{p.name}</span>
             </DropdownMenuItem>
           ))}
@@ -68,22 +83,26 @@ export function ProfileMenu({ profile, profiles }: { profile: ViewerProfile; pro
         <DropdownMenuItem render={<Link href="/profiles" />} className="gap-3 rounded-lg px-2 py-2">
           <Users className="size-4" /> Trocar perfil
         </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/settings/profiles" />} className="gap-3 rounded-lg px-2 py-2">
-          <Pencil className="size-4" /> Gerenciar perfis
-        </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/settings/subscription" />} className="gap-3 rounded-lg px-2 py-2">
-          <CreditCard className="size-4" /> Assinatura
-        </DropdownMenuItem>
-        <DropdownMenuItem render={<Link href="/settings" />} className="gap-3 rounded-lg px-2 py-2">
-          <Settings className="size-4" /> Configurações
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="my-2" />
-        <DropdownMenuItem
-          onClick={() => startTransition(() => signOut())}
-          className="gap-3 rounded-lg px-2 py-2 text-foreground/80"
-        >
-          <LogOut className="size-4" /> Sair
-        </DropdownMenuItem>
+        {canManage && (
+          <>
+            <DropdownMenuItem render={<Link href="/settings/profiles" />} className="gap-3 rounded-lg px-2 py-2">
+              <Pencil className="size-4" /> Gerenciar perfis
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/settings/subscription" />} className="gap-3 rounded-lg px-2 py-2">
+              <CreditCard className="size-4" /> Assinatura
+            </DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/settings" />} className="gap-3 rounded-lg px-2 py-2">
+              <Settings className="size-4" /> Configurações
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className="my-2" />
+            <DropdownMenuItem
+              onClick={() => startTransition(() => signOut())}
+              className="gap-3 rounded-lg px-2 py-2 text-foreground/80"
+            >
+              <LogOut className="size-4" /> Sair
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   )

@@ -35,7 +35,7 @@ export const mobileNav: NavItem[] = [
   { href: "/search", label: "Explorar", icon: Compass },
   { href: "/music", label: "Músicas", icon: Music },
   { href: "/my-list", label: "Minha Lista", icon: Bookmark },
-  { href: "/settings", label: "Perfil", icon: UserRound },
+  { href: "/settings", label: "Conta", icon: UserRound },
 ]
 
 export function isActive(pathname: string, href: string) {

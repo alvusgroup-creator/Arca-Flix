@@ -19,14 +19,15 @@ import {
   type AccountPreferences,
 } from "@/services/account"
 import { requireAccount } from "@/services/auth"
-import { ACTIVE_PROFILE_COOKIE } from "@/services/profiles"
+import { ACTIVE_PROFILE_COOKIE, requireFamilyManager } from "@/services/profiles"
 
 type Result = { error?: string; success?: string }
 
-const nameSchema = z.object({ fullName: z.string().trim().min(2, "Informe o seu nome.").max(60) })
+const nameSchema = z.object({ fullName: z.string().trim().min(2, "Informe seu nome.").max(60) })
 const emailSchema = z.object({ email: z.string().trim().email("E-mail inválido.") })
 
 export async function updateName(values: z.infer<typeof nameSchema>): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const parsed = nameSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
   const account = await requireAccount()
@@ -36,6 +37,7 @@ export async function updateName(values: z.infer<typeof nameSchema>): Promise<Re
 }
 
 export async function changeEmail(values: z.infer<typeof emailSchema>): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const parsed = emailSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
   await requireAccount()
@@ -56,6 +58,7 @@ export async function changeEmail(values: z.infer<typeof emailSchema>): Promise<
 }
 
 export async function changePassword(values: ResetInput): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const parsed = resetSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
   await requireAccount()
@@ -78,6 +81,7 @@ export async function updatePreferences(prefs: Partial<AccountPreferences>): Pro
 }
 
 export async function signOutDevice(deviceId: string): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const account = await requireAccount()
   await removeDevice(account.id, deviceId)
   revalidatePath("/settings/devices")
@@ -85,6 +89,7 @@ export async function signOutDevice(deviceId: string): Promise<Result> {
 }
 
 export async function clearHistory(): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const account = await requireAccount()
   await clearWatchHistory(account.id)
   revalidatePath("/", "layout")
@@ -92,6 +97,7 @@ export async function clearHistory(): Promise<Result> {
 }
 
 export async function deleteAccount(): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const account = await requireAccount()
 
   if (!isDemoMode) {

@@ -49,10 +49,28 @@ export function HeroBanner({ items, savedIds }: { items: Content[]; savedIds: st
           sizes="100vw"
           className={cn(
             "-z-20 object-cover transition-opacity duration-700 ease-(--ease-soft)",
+            item.posterUrl && "max-md:hidden",
             i === index ? "opacity-100" : "opacity-0"
           )}
         />
       ))}
+      {/* Celular: capas verticais (quando existem) enquadram melhor os personagens */}
+      {items.map((item, i) =>
+        item.posterUrl ? (
+          <Image
+            key={`${item.id}-poster`}
+            src={item.posterUrl}
+            alt=""
+            fill
+            preload={i === 0}
+            sizes="100vw"
+            className={cn(
+              "-z-20 object-cover object-top transition-opacity duration-700 ease-(--ease-soft) md:hidden",
+              i === index ? "opacity-100" : "opacity-0"
+            )}
+          />
+        ) : null
+      )}
       <div className="veil absolute inset-0 -z-10 md:hidden" />
       <div className="veil-side absolute inset-0 -z-10 max-md:hidden" />
 

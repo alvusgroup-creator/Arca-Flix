@@ -140,8 +140,8 @@ function ParentalForm({ profile, categories }: { profile: ViewerProfile; categor
               inputMode="numeric"
               maxLength={4}
               autoComplete="off"
-              placeholder="••••"
-              className="w-32 text-center tracking-[0.5em]"
+              placeholder={profile.hasPin ? "Novo PIN" : "Sem PIN"}
+              className="w-36 text-center tracking-[0.3em] placeholder:tracking-normal"
               aria-invalid={Boolean(formState.errors.pin)}
               {...register("pin", { setValueAs: (v: string) => (v === "" ? undefined : v) })}
             />
@@ -152,7 +152,7 @@ function ParentalForm({ profile, categories }: { profile: ViewerProfile; categor
             </Button>
           )}
         </div>
-        {formState.errors.pin && <p className="mt-2 text-xs text-red-300">{formState.errors.pin.message}</p>}
+        {formState.errors.pin && <p className="mt-2 text-xs text-red-700">{formState.errors.pin.message}</p>}
       </SettingsCard>
 
       <div className="flex justify-end">

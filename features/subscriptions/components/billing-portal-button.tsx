@@ -6,11 +6,19 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { openBillingPortal } from "../actions"
 
-export function BillingPortalButton() {
+export function BillingPortalButton({
+  label = "Gerenciar pagamento",
+  variant = "outline",
+  icon = true,
+}: {
+  label?: string
+  variant?: "outline" | "ghost" | "destructive"
+  icon?: boolean
+}) {
   const [pending, startTransition] = useTransition()
   return (
     <Button
-      variant="outline"
+      variant={variant}
       disabled={pending}
       onClick={() =>
         startTransition(async () => {
@@ -19,8 +27,8 @@ export function BillingPortalButton() {
         })
       }
     >
-      {pending ? <LoaderCircle className="animate-spin" /> : <CreditCard />}
-      Gerenciar pagamento
+      {pending ? <LoaderCircle className="animate-spin" /> : icon && <CreditCard />}
+      {label}
     </Button>
   )
 }

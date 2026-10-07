@@ -7,6 +7,7 @@ import { requireAccount } from "@/services/auth"
 import {
   ACTIVE_PROFILE_COOKIE,
   getActiveProfile,
+  requireFamilyManager,
   getProfilePinHash,
   insertProfile,
   listProfiles,
@@ -20,6 +21,7 @@ import { parentalSchema, profileSchema, type ParentalFormValues, type ProfileFor
 type Result = { error?: string; ok?: boolean }
 
 const DEFAULT_MAX_PROFILES = 5
+const ADULT_ONLY = "Peça a um adulto: entre no perfil adulto (com o PIN) para fazer isso."
 
 async function ownedProfile(profileId: string) {
   const account = await requireAccount()
@@ -48,6 +50,7 @@ export async function selectProfile(profileId: string, pin?: string): Promise<Re
 }
 
 export async function createProfile(values: ProfileFormValues): Promise<Result & { id?: string }> {
+  if (!(await requireFamilyManager()).allowed) return { error: ADULT_ONLY }
   const parsed = profileSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
 
@@ -68,6 +71,7 @@ export async function createProfile(values: ProfileFormValues): Promise<Result &
 }
 
 export async function updateProfile(profileId: string, values: ProfileFormValues): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: ADULT_ONLY }
   const parsed = profileSchema.safeParse(values)
   if (!parsed.success) return { error: parsed.error.issues[0]?.message }
   const { account, profile } = await ownedProfile(profileId)
@@ -100,6 +104,7 @@ export async function updateParentalControls(profileId: string, values: Parental
 }
 
 export async function deleteProfile(profileId: string): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: ADULT_ONLY }
   const { account, profile } = await ownedProfile(profileId)
   if (!profile) return { error: "Perfil não encontrado." }
   const profiles = await listProfiles(account.id)

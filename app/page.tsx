@@ -18,14 +18,18 @@ import { Logo } from "@/components/brand/logo"
 import { PublicHeader } from "@/components/layout/public-header"
 import { buttonVariants } from "@/components/ui/button"
 import { Faq } from "@/features/landing/components/faq"
+import { HeroMedia } from "@/features/landing/components/hero-media"
 import { Highlight } from "@/features/landing/components/highlight"
 import { MobileCtaBar } from "@/features/landing/components/mobile-cta-bar"
 import { SectionHeader } from "@/features/landing/components/section-header"
+import { landingMedia } from "@/features/landing/media"
 import { PlanCard } from "@/features/subscriptions/components/plan-card"
 import { isDemoMode } from "@/lib/env"
 import { cn } from "@/lib/utils"
 import { getCurrentAccount } from "@/services/auth"
+import { getCatalog } from "@/services/content"
 import { listPlans } from "@/services/subscriptions"
+import { contentMeta } from "@/utils/content"
 
 export const metadata: Metadata = {
   title: { absolute: "Arca Flix — Desenhos e histórias cristãs para crianças, sem anúncios" },
@@ -34,16 +38,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 }
 
-// Imagens provisórias (public/demo). Troque pelas artes finais — ver prompts no README.
-const IMG = {
-  hero: "/demo/jesus-kids.jpg",
-  watch: "/demo/noah-hero.jpg",
-  sing: "/demo/louvor-kids.jpg",
-  color: "/demo/coloring.jpg",
-  learn: "/demo/bible-stories.jpg",
-  parents: "/demo/salmos-criancas.jpg",
-  cta: "/demo/daniel-lions.jpg",
-}
+const IMG = landingMedia
 
 const benefits = [
   { icon: ShieldCheck, title: "Sem anúncios", text: "Nada de propaganda no meio do desenho." },
@@ -53,10 +48,10 @@ const benefits = [
 ]
 
 const moments = [
-  { icon: Clapperboard, label: "Assistir", title: "Séries e filmes bíblicos", text: "Noé, Daniel, Ester, José e muito mais, contados com carinho.", image: IMG.watch },
-  { icon: Music, label: "Cantar", title: "Louvor infantil", text: "Músicas para pular de alegria e salmos calminhos para dormir.", image: IMG.sing },
-  { icon: Palette, label: "Colorir", title: "Desenhos para imprimir", text: "Atividades para baixar, imprimir ou pintar direto na tela.", image: IMG.color },
-  { icon: BookOpen, label: "Aprender", title: "Estudos para a família", text: "Devocionais curtos e versículos para conversar juntos.", image: IMG.learn },
+  { icon: Clapperboard, label: "Assistir", title: "Séries e filmes bíblicos", text: "Noé, Daniel, Ester, José e muito mais, contados com carinho.", image: IMG.moments.watch },
+  { icon: Music, label: "Cantar", title: "Louvor infantil", text: "Músicas para pular de alegria e salmos calminhos para dormir.", image: IMG.moments.sing },
+  { icon: Palette, label: "Colorir", title: "Desenhos para imprimir", text: "Atividades para baixar, imprimir ou pintar direto na tela.", image: IMG.moments.color },
+  { icon: BookOpen, label: "Aprender", title: "Estudos para a família", text: "Devocionais curtos e versículos para conversar juntos.", image: IMG.moments.learn },
 ]
 
 const parentPoints = [
@@ -72,21 +67,30 @@ const steps = [
   { title: "Dê o play", text: "Monte o perfil de cada filho e comece a assistir." },
 ]
 
+function cheapestMonthly(plans: { billingInterval: string; priceCents: number }[]) {
+  const min = Math.min(...plans.filter((p) => p.billingInterval === "month").map((p) => p.priceCents))
+  return Number.isFinite(min) ? min : undefined
+}
+
 export default async function LandingPage() {
   if (await getCurrentAccount()) redirect("/profiles")
-  const plans = await listPlans()
+  const [plans, catalog] = await Promise.all([listPlans(), getCatalog(null)])
+  // Prova do produto: títulos reais do catálogo (séries e filmes primeiro).
+  const showcase = [...catalog]
+    .sort((a, b) => Number(b.type === "series" || b.type === "movie") - Number(a.type === "series" || a.type === "movie"))
+    .slice(0, 8)
 
   return (
     <div className="bg-surface-0 pb-20 md:pb-0">
       {/* ---------------------------------------------------------------- Hero */}
       <section className="relative isolate flex min-h-[92svh] flex-col bg-grape-900 md:min-h-[min(92svh,820px)]">
-        <Image src={IMG.hero} alt="" fill preload sizes="100vw" className="-z-20 object-cover object-[60%_center]" />
+        <HeroMedia {...IMG.hero} />
         <div className="veil absolute inset-0 -z-10 md:hidden" />
         <div className="veil-side absolute inset-0 -z-10 max-md:hidden" />
 
         <PublicHeader signedIn={false} tone="onDark" />
 
-        <div className="page-x flex flex-1 items-end pt-10 pb-28 md:items-center md:pb-32">
+        <div className="page-x flex flex-1 items-end pt-[38svh] pb-24 md:items-center md:pt-10 md:pb-32">
           <div className="mx-auto w-full max-w-xl text-center md:mx-0 md:max-w-2xl md:text-left">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
               <span className="size-1.5 rounded-full bg-sun-400" aria-hidden="true" />
@@ -114,9 +118,9 @@ export default async function LandingPage() {
 
       {/* ------------------------------------------- Faixa de benefícios (sobreposta) */}
       <div className="page-x relative z-10 -mt-16 md:-mt-14">
-        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-2xl bg-grape-900/10 shadow-soft-lg md:grid-cols-4">
+        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-2xl bg-grape-900/10 shadow-soft-lg lg:grid-cols-4">
           {benefits.map(({ icon: Icon, title, text }) => (
-            <li key={title} className="flex flex-col gap-2 bg-white p-4 sm:p-5 md:flex-row md:items-start md:gap-3">
+            <li key={title} className="flex flex-col gap-2 bg-white p-4 sm:flex-row sm:items-start sm:gap-3 sm:p-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-lilac-100 text-grape-600">
                 <Icon className="size-5" aria-hidden="true" />
               </span>
@@ -130,7 +134,7 @@ export default async function LandingPage() {
       </div>
 
       {/* --------------------------------------------- Um momento para cada hora */}
-      <section className="py-20 md:py-28" aria-labelledby="momentos">
+      <section className="pt-20 pb-14 md:pt-28 md:pb-20" aria-labelledby="momentos">
         <div className="page-x">
           <SectionHeader
             pill="O que tem no Arca Flix"
@@ -142,11 +146,11 @@ export default async function LandingPage() {
             text="Do desenho depois da escola ao salmo antes de dormir — tudo num só lugar."
           />
         </div>
-        <ul className="scrollbar-none mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto px-(--page-x) pb-2 md:mx-auto md:grid md:max-w-6xl md:grid-cols-4 md:overflow-visible md:px-(--page-x) lg:px-0">
+        <ul className="scrollbar-none mt-12 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 md:mx-auto md:grid md:max-w-6xl md:grid-cols-2 md:gap-x-6 md:gap-y-10 md:overflow-visible lg:grid-cols-4 lg:gap-5">
           {moments.map(({ icon: Icon, label, title, text, image }) => (
             <li key={title} className="reveal w-[78vw] shrink-0 snap-start sm:w-[46vw] md:w-auto">
-              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-grape-900">
-                <Image src={image} alt="" fill sizes="(min-width: 768px) 25vw, 78vw" className="object-cover" />
+              <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-grape-900 md:aspect-[16/11] lg:aspect-[4/5]">
+                <Image src={image} alt="" fill sizes="(min-width: 1024px) 25vw, (min-width: 768px) 50vw, 78vw" className="object-cover" />
                 <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-md bg-white px-2 py-1 text-xs font-bold text-grape-700">
                   <Icon className="size-3.5" aria-hidden="true" /> {label}
                 </span>
@@ -157,6 +161,32 @@ export default async function LandingPage() {
           ))}
         </ul>
       </section>
+
+      {/* ------------------------------------------------------ Já no catálogo */}
+      {showcase.length > 0 && (
+        <section className="pb-16 md:pb-20" aria-labelledby="catalogo">
+          <div className="page-x">
+            <SectionHeader
+              pill="Já no catálogo"
+              title={<span id="catalogo">Algumas histórias que esperam por vocês</span>}
+              text="Tudo com classificação indicativa — e novos títulos chegando sempre."
+            />
+          </div>
+          <ul className="scrollbar-none mt-10 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-4 lg:gap-5 lg:overflow-visible">
+            {showcase.map((item) => (
+              <li key={item.id} className="w-[62vw] shrink-0 snap-start sm:w-[38vw] lg:w-auto">
+                <Link href="/register" className="group block">
+                  <span className="relative block aspect-video overflow-hidden rounded-xl bg-grape-900 ring-1 ring-grape-900/5 transition-shadow group-hover:ring-2 group-hover:ring-grape-500">
+                    <Image src={item.thumbnailUrl} alt="" fill sizes="(min-width: 1024px) 25vw, 62vw" className="object-cover" />
+                  </span>
+                  <span className="mt-2 block font-heading text-[0.98rem] font-semibold text-grape-900">{item.title}</span>
+                  <span className="block text-sm text-muted-foreground">{contentMeta(item)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* ------------------------------------------------------- Pais no controle */}
       <section className="bg-white py-20 md:py-28" aria-labelledby="pais">
@@ -225,6 +255,7 @@ export default async function LandingPage() {
             <div className="mt-12 grid gap-5 md:grid-cols-3">
               {plans.map((plan) => (
                 <PlanCard
+                  monthlyReferenceCents={cheapestMonthly(plans)}
                   key={plan.id}
                   plan={plan}
                   example={isDemoMode || !plan.stripePriceId}
@@ -246,7 +277,7 @@ export default async function LandingPage() {
         <div className="page-x">
           <SectionHeader pill="Dúvidas" title={<span id="faq">Perguntas frequentes</span>} />
           <div className="mt-10">
-            <Faq />
+            <Faq profilesByPlan={plans.map((p) => `${p.name}: até ${p.maxProfiles}`).join(" · ")} />
           </div>
         </div>
       </section>
@@ -258,7 +289,7 @@ export default async function LandingPage() {
           <div className="veil absolute inset-0 -z-10" />
           <div className="mx-auto max-w-xl px-6 py-16 text-center md:py-24">
             <h2 className="text-[2rem] leading-[1.1] font-bold text-white sm:text-[2.75rem]">
-              Tela com valores que você aprova
+              Conteúdo com valores que você aprova
             </h2>
             <p className="mt-4 text-[1.05rem] leading-relaxed text-white/85">
               Crie sua conta e monte o perfil das crianças em poucos minutos.

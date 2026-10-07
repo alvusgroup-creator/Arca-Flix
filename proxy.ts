@@ -47,8 +47,10 @@ export async function proxy(request: NextRequest) {
 
   if (signedIn && matches(pathname, AUTH_PAGES) && !request.nextUrl.searchParams.has("step")) {
     const url = request.nextUrl.clone()
-    url.pathname = "/profiles"
-    url.search = ""
+    // Já logado e veio escolher um plano na landing: direto para o pagamento dele.
+    const plan = request.nextUrl.searchParams.get("plan")
+    url.pathname = plan && /^[a-z0-9-]+$/.test(plan) ? "/checkout" : "/profiles"
+    url.search = plan && url.pathname === "/checkout" ? `?plan=${plan}` : ""
     return NextResponse.redirect(url)
   }
 

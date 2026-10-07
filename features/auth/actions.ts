@@ -46,7 +46,7 @@ export async function signIn(input: LoginInput): Promise<ActionResult> {
     return {
       error:
         error.code === "email_not_confirmed"
-          ? "Confirme o seu e-mail antes de entrar."
+          ? "Confirme seu e-mail antes de entrar."
           : "E-mail ou senha incorretos.",
     }
   }
@@ -57,12 +57,14 @@ export async function signIn(input: LoginInput): Promise<ActionResult> {
 export async function signUp(input: RegisterInput): Promise<ActionResult> {
   const parsed = registerSchema.safeParse(input)
   if (!parsed.success) return firstError(parsed.error.issues)
-  const { name, email, password } = parsed.data
+  const { name, email, password, plan } = parsed.data
+  // Depois da conta: pagamento do plano escolhido, ou a lista de planos.
+  const afterSignup = plan ? `/checkout?plan=${plan}` : "/plans?step=2"
 
   if (isDemoMode) {
     await demoStore.clear()
     await demoStore.setSession({ name, email })
-    redirect("/plans?step=2")
+    redirect(afterSignup)
   }
 
   const supabase = await createClient()
@@ -71,7 +73,7 @@ export async function signUp(input: RegisterInput): Promise<ActionResult> {
     password,
     options: {
       data: { full_name: name },
-      emailRedirectTo: `${publicEnv.appUrl}/auth/callback?next=${encodeURIComponent("/plans?step=2")}`,
+      emailRedirectTo: `${publicEnv.appUrl}/auth/callback?next=${encodeURIComponent(afterSignup)}`,
     },
   })
   if (error) {
@@ -82,7 +84,7 @@ export async function signUp(input: RegisterInput): Promise<ActionResult> {
   if (!data.session) {
     return { success: `Enviamos um link de confirmação para ${email}. Abra-o para continuar.` }
   }
-  redirect("/plans?step=2")
+  redirect(afterSignup)
 }
 
 export async function signInWithGoogle(next?: string): Promise<ActionResult> {

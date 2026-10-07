@@ -18,10 +18,13 @@ type DialogState = { mode: "create" } | { mode: "edit"; profile: ViewerProfile }
 export function ProfilePicker({
   profiles,
   maxProfiles,
+  canManage,
   unlockId,
 }: {
   profiles: ViewerProfile[]
   maxProfiles: number
+  /** Perfil infantil não adiciona nem edita perfis */
+  canManage: boolean
   unlockId?: string
 }) {
   const router = useRouter()
@@ -63,7 +66,7 @@ export function ProfilePicker({
     })
   }
 
-  const canAdd = profiles.length < maxProfiles
+  const canAdd = canManage && profiles.length < maxProfiles
 
   return (
     <>
@@ -89,7 +92,7 @@ export function ProfilePicker({
         )}
       </ul>
 
-      {profiles.length > 0 && (
+      {canManage && profiles.length > 0 && (
         <div className="mt-12 flex justify-center">
           <Button variant="outline" size="lg" onClick={() => setEditing((v) => !v)} className="min-w-52">
             {editing ? "Concluído" : "Gerenciar perfis"}
@@ -106,6 +109,7 @@ export function ProfilePicker({
             <ProfileForm
               key={dialog.mode === "edit" ? dialog.profile.id : "new"}
               profile={dialog.mode === "edit" ? dialog.profile : undefined}
+              usedAvatars={profiles.map((p) => p.avatar)}
               onDone={() => {
                 toast.success(dialog.mode === "edit" ? "Perfil atualizado" : "Perfil criado")
                 setDialog(null)

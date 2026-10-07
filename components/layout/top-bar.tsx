@@ -13,10 +13,12 @@ export function TopBar({
   profile,
   profiles,
   notifications,
+  canManage,
 }: {
   profile: ViewerProfile
   profiles: ViewerProfile[]
   notifications: NotificationItem[]
+  canManage: boolean
 }) {
   return (
     <header
@@ -40,7 +42,7 @@ export function TopBar({
           </Link>
           <div className="flex items-center gap-1.5 md:ml-auto">
             <NotificationsMenu notifications={notifications} />
-            <ProfileMenu profile={profile} profiles={profiles} />
+            <ProfileMenu profile={profile} profiles={profiles} canManage={canManage} />
           </div>
         </div>
       </div>

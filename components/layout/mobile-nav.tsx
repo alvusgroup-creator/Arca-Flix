@@ -25,7 +25,7 @@ export function MobileNav() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex h-full flex-col items-center justify-center gap-1 text-[0.68rem] font-medium text-foreground/55 transition-colors",
+                  "flex h-full flex-col items-center justify-center gap-1 text-[0.75rem] font-semibold text-foreground/55 transition-colors",
                   active && "text-grape-700"
                 )}
               >

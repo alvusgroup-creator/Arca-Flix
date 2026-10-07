@@ -26,11 +26,17 @@ export function ProfileForm({
   onDone,
   submitLabel,
   footer,
+  defaults,
+  usedAvatars = [],
 }: {
   profile?: ViewerProfile
   onDone: (id: string) => void
   submitLabel?: string
   footer?: React.ReactNode
+  /** Valores iniciais para um perfil novo */
+  defaults?: { name?: string; kind?: ProfileKind }
+  /** Avatares já usados na conta — o perfil novo começa num que esteja livre */
+  usedAvatars?: string[]
 }) {
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string>()
@@ -42,9 +48,9 @@ export function ProfileForm({
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: profile?.name ?? "",
-      avatar: profile?.avatar ?? "lamb",
-      kind: profile?.kind ?? "kids",
+      name: profile?.name ?? defaults?.name ?? "",
+      avatar: profile?.avatar ?? (AVATARS.find((a) => !usedAvatars.includes(a.id))?.id ?? "lamb"),
+      kind: profile?.kind ?? defaults?.kind ?? "kids",
     },
   })
 
@@ -109,7 +115,7 @@ export function ProfileForm({
           aria-invalid={Boolean(errors.name)}
           {...register("name")}
         />
-        {errors.name && <p className="text-xs text-red-300">{errors.name.message}</p>}
+        {errors.name && <p className="text-xs text-red-700">{errors.name.message}</p>}
       </div>
 
       <Controller
@@ -144,7 +150,7 @@ export function ProfileForm({
       />
 
       {error && (
-        <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-red-200">
+        <p role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-red-800">
           {error}
         </p>
       )}

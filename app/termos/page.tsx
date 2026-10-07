@@ -21,7 +21,7 @@ export default function TermsPage() {
       <ul>
         <li>A conta é pessoal do titular adulto, responsável por todos os perfis criados nela.</li>
         <li>Perfis infantis devem ser criados e supervisionados pelo responsável legal da criança.</li>
-        <li>Mantenha a sua senha e os PINs dos perfis em sigilo. Avise-nos em caso de uso não autorizado.</li>
+        <li>Mantenha sua senha e os PINs dos perfis em sigilo. Avise-nos em caso de uso não autorizado.</li>
       </ul>
 
       <h2>2. Assinatura e pagamento</h2>

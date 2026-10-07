@@ -86,11 +86,19 @@ export default async function SubscriptionPage() {
           )}
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <BillingPortalButton />
+            <BillingPortalButton label="Trocar cartão e ver faturas" />
             <Link href="/plans" className={buttonVariants({ variant: "ghost" })}>
               Ver outros planos
             </Link>
           </div>
+          {!subscription.cancelAtPeriodEnd && subscription.status !== "canceled" && (
+            <div className="mt-6 border-t border-grape-900/10 pt-5">
+              <p className="mb-3 text-sm text-muted-foreground">
+                Sem multa e sem ligação: você continua com acesso até o fim do período já pago.
+              </p>
+              <BillingPortalButton label="Cancelar assinatura" variant="destructive" icon={false} />
+            </div>
+          )}
         </SettingsCard>
       </div>
     </>

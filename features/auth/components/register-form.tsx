@@ -14,7 +14,7 @@ import { FieldError, FormMessage } from "./auth-card"
 import { GoogleButton } from "./google-button"
 import { PasswordInput } from "./password-input"
 
-export function RegisterForm() {
+export function RegisterForm({ plan }: { plan?: { slug: string; label: string } }) {
   const [pending, startTransition] = useTransition()
   const [message, setMessage] = useState<{ tone: "error" | "success"; text: string }>()
   const {
@@ -23,7 +23,7 @@ export function RegisterForm() {
     formState: { errors },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { name: "", email: "", password: "" },
+    defaultValues: { name: "", email: "", password: "", plan: plan?.slug },
   })
 
   const onSubmit = handleSubmit((values) => {
@@ -38,6 +38,17 @@ export function RegisterForm() {
   return (
     <div className="space-y-5">
       <form onSubmit={onSubmit} noValidate className="space-y-4">
+        {plan && (
+          <p className="flex items-center justify-between gap-3 rounded-xl border border-grape-500/30 bg-lilac-100 px-4 py-3 text-sm">
+            <span>
+              <span className="block text-xs font-semibold tracking-wide text-grape-600 uppercase">Plano escolhido</span>
+              <span className="font-semibold text-grape-900">{plan.label}</span>
+            </span>
+            <Link href="/plans" className="shrink-0 font-semibold text-grape-600 underline">
+              Trocar
+            </Link>
+          </p>
+        )}
         {message && <FormMessage tone={message.tone}>{message.text}</FormMessage>}
 
         <div className="space-y-1.5">
@@ -99,7 +110,9 @@ export function RegisterForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Já tem conta?{" "}
-        <Link href="/login" className="font-semibold text-foreground hover:text-lilac-400">
+        <Link
+          href={plan ? `/login?next=${encodeURIComponent(`/checkout?plan=${plan.slug}`)}` : "/login"}
+          className="font-semibold text-foreground hover:text-lilac-400">
           Entrar
         </Link>
       </p>

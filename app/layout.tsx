@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Arca Flix",
     locale: "pt_BR",
-    images: ["/demo/noah-hero.jpg"],
+    images: [{ url: "/landing/og.jpg", width: 1200, height: 630, alt: "Arca Flix — streaming cristão para a família" }],
   },
 }
 

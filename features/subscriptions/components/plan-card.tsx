@@ -11,6 +11,7 @@ export function PlanCard({
   cta = "Assinar",
   example = false,
   current = false,
+  monthlyReferenceCents,
 }: {
   plan: SubscriptionPlan
   href: string
@@ -18,7 +19,13 @@ export function PlanCard({
   /** Preço fictício (modo demonstração): mostra selo "Exemplo". */
   example?: boolean
   current?: boolean
+  /** Preço do plano mensal mais barato — para mostrar a economia do anual */
+  monthlyReferenceCents?: number
 }) {
+  const perMonth = plan.billingInterval === "year" ? Math.round(plan.priceCents / 12) : null
+  const yearlySaving =
+    perMonth !== null && monthlyReferenceCents ? monthlyReferenceCents * 12 - plan.priceCents : 0
+
   return (
     <article
       className={cn(
@@ -45,12 +52,17 @@ export function PlanCard({
         <span className="font-heading text-4xl font-bold tracking-tight">{formatPrice(plan.priceCents, plan.currency)}</span>
         <span className="text-sm text-muted-foreground">/{intervalLabel[plan.billingInterval]}</span>
       </p>
+      <p className="mt-1 min-h-5 text-sm font-semibold text-grape-600">
+        {perMonth !== null
+          ? `equivale a ${formatPrice(perMonth, plan.currency)}/mês${yearlySaving > 0 ? ` · economize ${formatPrice(yearlySaving, plan.currency)}` : ""}`
+          : "cobrado todo mês"}
+      </p>
 
-      <ul className="mt-6 flex-1 space-y-3 text-sm">
+      <ul className="mt-6 flex-1 space-y-3 text-[0.95rem]">
         {plan.features.map((f) => (
           <li key={f} className="flex gap-2.5">
             <Check className="mt-0.5 size-4 shrink-0 text-lilac-400" aria-hidden="true" />
-            <span className="text-foreground/85">{f}</span>
+            <span className="text-grape-900">{f}</span>
           </li>
         ))}
       </ul>

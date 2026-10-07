@@ -77,7 +77,7 @@ async function syncSubscription(subscriptionId: string, fallbackUserId?: string 
     if (profile?.email) {
       await sendEmail({
         to: profile.email,
-        subject: "A sua assinatura Arca Flix está ativa",
+        subject: "Sua assinatura Arca Flix está ativa",
         html: subscriptionActivatedEmail(profile.full_name ?? "", plan?.name ?? "Arca Flix"),
       })
     }

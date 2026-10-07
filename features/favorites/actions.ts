@@ -13,6 +13,6 @@ export async function toggleMyList(contentId: string): Promise<{ saved?: boolean
     revalidatePath("/my-list")
     return { saved }
   } catch {
-    return { error: "Não foi possível atualizar a sua lista." }
+    return { error: "Não foi possível atualizar sua lista." }
   }
 }

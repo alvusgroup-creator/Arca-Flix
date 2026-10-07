@@ -34,7 +34,12 @@ export default async function MusicCollectionPage({ params }: PageProps<"/music/
   const tracks = await Promise.all(
     collection.tracks.map(async (t) => ({
       ...t,
-      audioUrl: !subscribed ? null : isDemoMode ? serverEnv.demoAudioUrl : await resolvePrivateMedia("audio", t.audioUrl),
+      // Sem o arquivo real enviado ainda, toca o áudio de teste (fase de validação).
+      audioUrl: !subscribed
+        ? null
+        : isDemoMode
+          ? serverEnv.demoAudioUrl
+          : ((await resolvePrivateMedia("audio", t.audioUrl)) ?? serverEnv.demoAudioUrl),
     }))
   )
   const { content } = collection

@@ -71,7 +71,9 @@ export const demoContent: Content[] = [
     title: "A Arca de Noé",
     description:
       "Noé ouve a voz de Deus e constrói uma arca enorme para salvar sua família e os animais. Uma aventura sobre fé, obediência e a promessa do arco-íris.",
-    thumbnailUrl: img("noah-hero"),
+    thumbnailUrl: "/catalog/arca-de-noe/thumb.jpg",
+    bannerUrl: "/catalog/arca-de-noe/banner.jpg",
+    posterUrl: "/catalog/arca-de-noe/poster.jpg",
     featured: true,
     genres: ["Aventura", "Animais", "Família"],
     categories: cat("antigo-testamento", "arca-de-noe", "animais"),
@@ -114,7 +116,7 @@ export const demoContent: Content[] = [
     slug: "ester",
     title: "Ester",
     description:
-      "Uma jovem corajosa se torna rainha da Pérsia e arrisca tudo para salvar o seu povo. Uma história sobre propósito e coragem.",
+      "Uma jovem corajosa se torna rainha da Pérsia e arrisca tudo para salvar seu povo. Uma história sobre propósito e coragem.",
     thumbnailUrl: img("esther"),
     genres: ["Coragem", "Realeza"],
     categories: cat("antigo-testamento"),
@@ -238,6 +240,11 @@ const episodeTitles: Record<string, string[][]> = {
   ],
 }
 
+// Arte própria de cada episódio (quando existe); senão usa a miniatura da série.
+const episodeArt: Record<string, string> = Object.fromEntries(
+  ["t1e1", "t1e2", "t1e3", "t1e4", "t1e5", "t2e1", "t2e2"].map((k) => [`a-arca-de-noe/${k}`, `/catalog/arca-de-noe/${k}.jpg`])
+)
+
 export const demoSeasons: Season[] = Object.entries(episodeTitles).flatMap(
   ([slug, seasons]) => {
     const content = demoContent.find((c) => c.slug === slug)!
@@ -255,9 +262,9 @@ export const demoSeasons: Season[] = Object.entries(episodeTitles).flatMap(
           seasonNumber: s + 1,
           number: e + 1,
           title,
-          description: `${content.title}: ${title.toLowerCase()}. Um episódio para assistir em família e conversar sobre o que aprendemos.`,
+          description: `${title}. Um episódio para assistir em família e conversar sobre o que aprendemos.`,
           durationSeconds: (9 + ((e * 3 + s) % 5)) * 60,
-          thumbnailUrl: content.thumbnailUrl,
+          thumbnailUrl: episodeArt[`${slug}/t${s + 1}e${e + 1}`] ?? content.thumbnailUrl,
           videoId: "demo",
         })),
       }
@@ -389,7 +396,7 @@ Escolha três horários do dia para fazer uma oração curta, como Daniel.`,
     kind: "versiculo",
     readingMinutes: 3,
     bibleReference: "João 3:16",
-    body: `> "Porque Deus amou o mundo de tal maneira que deu o seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."
+    body: `> "Porque Deus amou o mundo de tal maneira que deu seu Filho unigênito, para que todo aquele que nele crê não pereça, mas tenha a vida eterna."
 
 ## Como memorizar
 
@@ -419,7 +426,7 @@ export const demoPlans: SubscriptionPlan[] = [
     billingInterval: "month",
     maxProfiles: 3,
     maxDevices: 2,
-    features: ["Catálogo completo", "Músicas e playlists", "Materiais para colorir", "Até 3 perfis"],
+    features: ["Todo o catálogo: séries, filmes, músicas e estudos", "Desenhos para colorir e imprimir", "Até 3 perfis", "2 telas ao mesmo tempo"],
     stripePriceId: null,
     highlighted: false,
     active: true,
@@ -428,13 +435,13 @@ export const demoPlans: SubscriptionPlan[] = [
     id: "plan-anual",
     name: "Anual",
     slug: "anual",
-    description: "Um ano inteiro de conteúdo com economia.",
+    description: "O mesmo catálogo, pagando uma vez por ano.",
     priceCents: 17990,
     currency: "BRL",
     billingInterval: "year",
     maxProfiles: 4,
     maxDevices: 3,
-    features: ["Tudo do Mensal", "Estudos bíblicos", "Até 4 perfis", "3 telas ao mesmo tempo"],
+    features: ["Tudo do plano Mensal", "Até 4 perfis", "3 telas ao mesmo tempo", "Uma cobrança por ano"],
     stripePriceId: null,
     highlighted: true,
     active: true,
@@ -443,13 +450,13 @@ export const demoPlans: SubscriptionPlan[] = [
     id: "plan-familia",
     name: "Família Premium",
     slug: "familia-premium",
-    description: "Para famílias grandes e ministérios infantis.",
+    description: "Cobrança mensal, para famílias grandes e ministérios infantis.",
     priceCents: 2990,
     currency: "BRL",
     billingInterval: "month",
     maxProfiles: 6,
     maxDevices: 5,
-    features: ["Tudo do Anual", "Até 6 perfis", "5 telas ao mesmo tempo", "Downloads em PDF ilimitados"],
+    features: ["Todo o catálogo, igual aos outros planos", "Até 6 perfis", "5 telas ao mesmo tempo", "Ideal para escola dominical e ministério infantil"],
     stripePriceId: null,
     highlighted: false,
     active: true,

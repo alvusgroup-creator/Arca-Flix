@@ -17,7 +17,7 @@ export default async function SettingsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title="Configurações" description="Gerencie a sua conta, os perfis da família e a assinatura." />
+      <PageHeader title="Configurações" description="Gerencie sua conta, os perfis da família e a assinatura." />
 
       <div className="flex items-center gap-4 rounded-3xl border border-grape-600/[0.07] bg-surface-1 p-5">
         <Image src={avatarSrc(profile.avatar)} alt="" width={56} height={56} className="size-14 rounded-2xl object-cover" />

@@ -103,18 +103,28 @@ export function VideoPlayer(props: VideoPlayerProps) {
     if (!video) return
     let cancelled = false
 
-    const start = () => {
-      if (startAt > 5) video.currentTime = startAt
+    // Tenta tocar sozinho; se o navegador bloquear, tenta sem som; se ainda assim
+    // não der, some o "carregando" e aparece o botão grande de play.
+    const tryPlay = () => {
       video.play().catch(() => {
-            // Autoplay bloqueado: mostra o botão de play em vez do spinner.
-            setPlaying(false)
-            setWaiting(false)
-          })
+        video.muted = true
+        video.play().catch(() => {
+          setPlaying(false)
+          setWaiting(false)
+        })
+      })
     }
+    // Rede lenta ou bloqueio silencioso: nunca deixar o círculo girando para sempre.
+    const giveUp = setTimeout(() => setWaiting(false), 8000)
 
     if (video.canPlayType("application/vnd.apple.mpegurl")) {
+      // HLS nativo (Safari e Chrome recentes): com preload="none" os metadados só
+      // chegam depois de um play — por isso pede o play já e retoma o ponto depois.
       video.src = src
-      video.addEventListener("loadedmetadata", start, { once: true })
+      if (startAt > 5) {
+        video.addEventListener("loadedmetadata", () => (video.currentTime = startAt), { once: true })
+      }
+      tryPlay()
     } else {
       import("hls.js").then(({ default: HlsCtor }) => {
         if (cancelled) return
@@ -129,11 +139,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
               .map((l, index) => ({ index, label: l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1000)} kbps` }))
               .reverse()
           )
-          video.play().catch(() => {
-            // Autoplay bloqueado: mostra o botão de play em vez do spinner.
-            setPlaying(false)
-            setWaiting(false)
-          })
+          tryPlay()
         })
         hls.on(HlsCtor.Events.ERROR, (_e, data) => {
           if (data.fatal) setError(true)
@@ -142,6 +148,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
     }
 
     return () => {
+      clearTimeout(giveUp)
       cancelled = true
       hlsRef.current?.destroy()
       hlsRef.current = null
@@ -303,11 +310,33 @@ export function VideoPlayer(props: VideoPlayerProps) {
         </div>
       )}
 
+      {!playing && !waiting && !error && countdown === null && (
+        <button
+          type="button"
+          onClick={togglePlay}
+          aria-label="Assistir"
+          className="absolute inset-0 z-[5] grid place-items-center bg-black/30"
+        >
+          <span className="grid size-20 place-items-center rounded-full bg-white text-grape-700 shadow-2xl transition-transform hover:scale-105 sm:size-24">
+            <Play className="size-9 translate-x-0.5 fill-current sm:size-11" />
+          </span>
+        </button>
+      )}
+      {muted && playing && (
+        <button
+          type="button"
+          onClick={toggleMute}
+          className="absolute top-20 right-4 z-20 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-grape-700 shadow-lg sm:right-6"
+        >
+          <VolumeX className="size-4" /> Toque para ativar o som
+        </button>
+      )}
+
       {error && (
         <div className="absolute inset-0 grid place-items-center bg-black/80 p-6 text-center">
           <div className="max-w-sm space-y-4">
             <p className="text-xl font-semibold">Não foi possível reproduzir este vídeo</p>
-            <p className="text-sm text-white/70">Verifique a sua ligação à internet e tente novamente.</p>
+            <p className="text-sm text-white/70">Verifique sua ligação à internet e tente novamente.</p>
             <button
               type="button"
               onClick={() => window.location.reload()}

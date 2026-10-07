@@ -159,9 +159,18 @@ export async function getHomeData(profile: ViewerProfile | null) {
     { id: "studies", title: "Estudos e atividades", items: items.filter((c) => c.type === "study"), href: "/estudos" },
   ]
 
+  // Catálogo pequeno: não repetir fileiras que só mostram títulos já vistos acima.
+  const shown = new Set<string>()
+  const visibleRows = rows.filter((r) => {
+    if (!r.items.length) return false
+    const fresh = r.items.some((c) => !shown.has(c.id))
+    r.items.forEach((c) => shown.add(c.id))
+    return fresh
+  })
+
   return {
     hero: (featured.length ? featured : videos).slice(0, 5),
-    rows: rows.filter((r) => r.items.length > 0),
+    rows: visibleRows,
   }
 }
 

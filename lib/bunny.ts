@@ -1,6 +1,5 @@
 import "server-only"
 import { createHash } from "node:crypto"
-import { isDemoMode } from "@/lib/env"
 import { isBunnyConfigured, serverEnv } from "@/lib/env.server"
 
 export interface VideoSource {
@@ -37,12 +36,11 @@ function signDirectory(videoId: string) {
  * Só deve ser chamada depois de verificar sessão e assinatura.
  */
 export function getVideoSource(videoId: string | null): VideoSource | null {
+  // Fase de validação (sem provedor de vídeo ligado): todos os títulos tocam o
+  // stream de teste, para a experiência ficar completa. Com o Bunny configurado,
+  // só toca quem tem video_id real.
+  if (!isBunnyConfigured) return { src: serverEnv.demoVideoUrl, captions: [] }
   if (!videoId) return null
-
-  if (!isBunnyConfigured) {
-    // Modo demonstração: stream público de teste.
-    return isDemoMode || videoId === "demo" ? { src: serverEnv.demoVideoUrl, captions: [] } : null
-  }
 
   const base = serverEnv.bunnyTokenKey
     ? signDirectory(videoId)

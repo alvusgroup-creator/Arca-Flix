@@ -82,6 +82,7 @@ export function ProfilesManager({ profiles, maxProfiles }: { profiles: ViewerPro
             <ProfileForm
               key={editing === "new" ? "new" : editing.id}
               profile={editing === "new" ? undefined : editing}
+              usedAvatars={profiles.map((p) => p.avatar)}
               onDone={() => {
                 toast.success(editing === "new" ? "Perfil criado" : "Perfil atualizado")
                 setEditing(null)

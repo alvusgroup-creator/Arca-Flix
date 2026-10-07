@@ -7,6 +7,7 @@ import { OnboardingSteps } from "@/components/shared/onboarding-steps"
 import { CheckoutButton } from "@/features/subscriptions/components/checkout-button"
 import { isDemoMode } from "@/lib/env"
 import { requireAccount } from "@/services/auth"
+import { listProfiles } from "@/services/profiles"
 import { getPlanBySlug } from "@/services/subscriptions"
 import { formatPrice, intervalLabel } from "@/utils/format"
 
@@ -14,6 +15,7 @@ export const metadata: Metadata = { title: "Pagamento", robots: { index: false, 
 
 export default async function CheckoutPage({ searchParams }: PageProps<"/checkout">) {
   const account = await requireAccount()
+  const firstTime = (await listProfiles(account.id)).length === 0
   const { plan: slug, canceled } = await searchParams
   const plan = typeof slug === "string" ? await getPlanBySlug(slug) : null
   if (!plan) redirect("/plans?step=2")
@@ -22,7 +24,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
     <div className="min-h-dvh">
       <PublicHeader signedIn />
       <main className="page-x mx-auto max-w-5xl pt-4 pb-20">
-        <OnboardingSteps current={3} className="mb-10" />
+        {firstTime && <OnboardingSteps current={3} className="mb-10" />}
 
         <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
           <section className="space-y-6">
@@ -30,7 +32,7 @@ export default async function CheckoutPage({ searchParams }: PageProps<"/checkou
               <ArrowLeft className="size-4" /> Trocar de plano
             </Link>
             <div className="space-y-2">
-              <h1 className="text-3xl font-semibold sm:text-4xl">Finalize a sua assinatura</h1>
+              <h1 className="text-3xl font-semibold sm:text-4xl">Finalize sua assinatura</h1>
               <p className="text-muted-foreground">
                 Você será levado ao ambiente seguro do Stripe para pagar com cartão. O acesso é liberado assim que o
                 pagamento for confirmado.

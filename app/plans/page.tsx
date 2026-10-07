@@ -10,8 +10,13 @@ import { getSubscription, listPlans } from "@/services/subscriptions"
 
 export const metadata: Metadata = {
   title: "Planos",
-  description: "Escolha o plano do Arca Flix para a sua família: séries, filmes, músicas e atividades cristãs.",
+  description: "Escolha o plano do Arca Flix para sua família: séries, filmes, músicas e atividades cristãs.",
   alternates: { canonical: "/plans" },
+}
+
+function cheapestMonthly(plans: { billingInterval: string; priceCents: number }[]) {
+  const min = Math.min(...plans.filter((p) => p.billingInterval === "month").map((p) => p.priceCents))
+  return Number.isFinite(min) ? min : undefined
 }
 
 export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
@@ -45,6 +50,7 @@ export default async function PlansPage({ searchParams }: PageProps<"/plans">) {
           <div className="mt-12 grid gap-6 md:grid-cols-3 md:gap-5 lg:gap-8">
             {plans.map((plan) => (
               <PlanCard
+                monthlyReferenceCents={cheapestMonthly(plans)}
                 key={plan.id}
                 plan={plan}
                 example={isDemoMode || !plan.stripePriceId}

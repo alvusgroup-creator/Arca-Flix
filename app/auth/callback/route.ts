@@ -11,8 +11,19 @@ export async function GET(request: NextRequest) {
 
   if (!isDemoMode && code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${next}`)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      // Conta nova (ex.: primeiro login com Google) cai no passo de escolher plano,
+      // igual ao cadastro por e-mail.
+      if (next === "/profiles" && data.user) {
+        const [{ count: profiles }, { count: subscriptions }] = await Promise.all([
+          supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("user_id", data.user.id),
+          supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("user_id", data.user.id),
+        ])
+        if (!profiles && !subscriptions) return NextResponse.redirect(`${origin}/plans?step=2`)
+      }
+      return NextResponse.redirect(`${origin}${next}`)
+    }
   }
 
   return NextResponse.redirect(`${origin}/login?error=link`)

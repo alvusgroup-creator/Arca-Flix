@@ -23,7 +23,7 @@ export default async function AdminDashboardPage() {
       <PageHeader
         eyebrow="Painel"
         title="Visão geral"
-        description={isDemoMode ? "Modo demonstração: os números refletem apenas a sua sessão local." : "Indicadores da plataforma em tempo real."}
+        description={isDemoMode ? "Modo demonstração: os números refletem apenas sua sessão local." : "Indicadores da plataforma em tempo real."}
       />
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

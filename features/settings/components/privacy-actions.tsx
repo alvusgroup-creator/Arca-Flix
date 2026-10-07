@@ -42,7 +42,7 @@ export function PrivacyActions() {
         className="border-destructive/25"
       >
         <ConfirmDialog
-          title="Excluir a sua conta?"
+          title="Excluir sua conta?"
           description="Todos os perfis, listas e históricos serão apagados definitivamente e a assinatura será cancelada."
           confirmLabel="Excluir definitivamente"
           destructive

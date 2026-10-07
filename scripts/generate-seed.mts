@@ -32,7 +32,7 @@ out.push("")
 
 for (const c of demoContent) {
   out.push(
-    `insert into public.content (id, title, slug, description, short_description, type, thumbnail_url, banner_url, age_rating, genres, release_date, video_id, duration_seconds, published, featured) values (` +
+    `insert into public.content (id, title, slug, description, short_description, type, thumbnail_url, banner_url, poster_url, age_rating, genres, release_date, video_id, duration_seconds, published, featured) values (` +
       [
         id("content", c.slug),
         q(c.title),
@@ -42,6 +42,7 @@ for (const c of demoContent) {
         q(c.type),
         q(c.thumbnailUrl),
         q(c.bannerUrl),
+        q(c.posterUrl),
         q(c.ageRating),
         arr(c.genres),
         c.releaseYear ? q(`${c.releaseYear}-01-01`) : "null",

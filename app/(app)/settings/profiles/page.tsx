@@ -12,7 +12,7 @@ export default async function SettingsProfilesPage() {
   const [profiles, subscription] = await Promise.all([listProfiles(account.id), getSubscription(account.id)])
   return (
     <>
-      <SettingsTitle title="Perfis" description="Cada pessoa da família com o seu histórico, lista e recomendações." />
+      <SettingsTitle title="Perfis" description="Cada pessoa da família com seu histórico, lista e recomendações." />
       <ProfilesManager profiles={profiles} maxProfiles={subscription?.plan?.maxProfiles ?? 5} />
     </>
   )

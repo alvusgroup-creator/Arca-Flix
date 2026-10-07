@@ -27,10 +27,15 @@ const ITEMS = [
   },
 ]
 
-export function Faq() {
+export function Faq({ profilesByPlan }: { profilesByPlan?: string }) {
+  const items = ITEMS.map((item) =>
+    item.q === "Quantos filhos podem usar?" && profilesByPlan
+      ? { ...item, a: `Cada pessoa da casa tem o próprio perfil, com histórico, lista e controle parental separados. Perfis por plano: ${profilesByPlan}.` }
+      : item
+  )
   return (
     <div className="mx-auto max-w-3xl divide-y divide-grape-900/10 border-y border-grape-900/10">
-      {ITEMS.map(({ q, a }) => (
+      {items.map(({ q, a }) => (
         <details key={q} className="group py-1">
           <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left font-heading text-[1.05rem] font-semibold text-grape-900 [&::-webkit-details-marker]:hidden">
             {q}

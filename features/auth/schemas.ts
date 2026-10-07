@@ -1,18 +1,23 @@
 import { z } from "zod"
 
-const email = z.string().trim().min(1, "Informe o seu e-mail.").email("E-mail inválido.")
+const email = z.string().trim().min(1, "Informe seu e-mail.").email("E-mail inválido.")
 const password = z.string().min(8, "A senha precisa ter pelo menos 8 caracteres.")
 
 export const loginSchema = z.object({
   email,
-  password: z.string().min(1, "Informe a sua senha."),
+  password: z.string().min(1, "Informe sua senha."),
   next: z.string().optional(),
 })
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(2, "Informe o seu nome.").max(60),
+  name: z.string().trim().min(2, "Informe seu nome.").max(60),
   email,
   password,
+  /** Plano escolhido na landing (slug) — leva direto ao pagamento */
+  plan: z
+    .string()
+    .regex(/^[a-z0-9-]{1,60}$/)
+    .optional(),
 })
 
 export const forgotSchema = z.object({ email })

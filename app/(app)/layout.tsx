@@ -4,7 +4,7 @@ import { MobileNav } from "@/components/layout/mobile-nav"
 import { TopBar } from "@/components/layout/top-bar"
 import { AudioPlayerProvider } from "@/features/music/components/audio-player"
 import { getNotifications } from "@/services/notifications"
-import { listProfiles, requireActiveProfile } from "@/services/profiles"
+import { canManageFamily, listProfiles, requireActiveProfile } from "@/services/profiles"
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -23,7 +23,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         Pular para o conteúdo
       </a>
       <AppSidebar isAdmin={account.role === "admin"} />
-      <TopBar profile={profile} profiles={profiles} notifications={notifications} />
+      <TopBar
+        profile={profile}
+        profiles={profiles}
+        notifications={notifications}
+        canManage={canManageFamily(profiles, profile)}
+      />
       <main
         id="conteudo"
         className="min-h-dvh pt-(--topbar-h) pb-[calc(var(--mobile-nav-h)+env(safe-area-inset-bottom))] md:pb-0 md:pl-(--sidebar-w)"

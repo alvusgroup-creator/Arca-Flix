@@ -68,7 +68,7 @@ export function PinDialog({
             />
           ))}
         </div>
-        <p className="min-h-5 text-sm text-red-300" role="alert">
+        <p className="min-h-5 text-sm text-red-700" role="alert">
           {pending ? <LoaderCircle className="mx-auto size-5 animate-spin text-foreground/60" /> : error}
         </p>
       </DialogContent>

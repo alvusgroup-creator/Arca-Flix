@@ -10,6 +10,7 @@ import { SeasonEpisodes } from "@/components/content/season-episodes"
 import { EmptyState } from "@/components/shared/empty-state"
 import { PageContainer } from "@/components/shared/page-header"
 import { buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 import { MyListButton } from "@/features/favorites/components/my-list-button"
 import { filterForProfile, getContentBySlug, getContentDetail, getSimilar } from "@/services/content"
 import { getFavoriteIds } from "@/services/favorites"
@@ -71,7 +72,18 @@ export default async function ContentPage({ params }: PageProps<"/content/[slug]
     <article>
       {/* Banner: foto inteira + véu escuro, texto branco */}
       <section className="relative isolate flex min-h-[70svh] items-end overflow-hidden bg-grape-900 md:min-h-[min(72svh,620px)]">
-        <Image src={content.bannerUrl} alt="" fill preload sizes="100vw" className="-z-20 object-cover" />
+        <Image
+          src={content.bannerUrl}
+          alt=""
+          fill
+          preload
+          sizes="100vw"
+          className={cn("-z-20 object-cover", content.posterUrl && "max-md:hidden")}
+        />
+        {/* Celular: a capa vertical enquadra melhor o personagem */}
+        {content.posterUrl && (
+          <Image src={content.posterUrl} alt="" fill preload sizes="100vw" className="-z-20 object-cover object-top md:hidden" />
+        )}
         <div className="veil absolute inset-0 -z-10 md:hidden" />
         <div className="veil-side absolute inset-0 -z-10 max-md:hidden" />
 

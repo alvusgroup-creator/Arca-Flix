@@ -6,7 +6,7 @@ export const metadata: Metadata = { title: "Recuperar senha" }
 
 export default function ForgotPasswordPage() {
   return (
-    <AuthCard title="Recuperar senha" description="Informe o seu e-mail e enviaremos um link para criar uma nova senha.">
+    <AuthCard title="Recuperar senha" description="Informe seu e-mail e enviaremos um link para criar uma nova senha.">
       <ForgotForm />
     </AuthCard>
   )

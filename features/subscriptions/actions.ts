@@ -8,6 +8,7 @@ import { getStripe } from "@/lib/stripe"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { requireAccount } from "@/services/auth"
+import { requireFamilyManager } from "@/services/profiles"
 import { getPlanBySlug, getSubscription } from "@/services/subscriptions"
 
 type Result = { error?: string }
@@ -69,6 +70,7 @@ export async function startCheckout(planSlug: string): Promise<Result> {
 
 /** Portal do cliente Stripe: trocar cartão, cancelar, ver faturas. */
 export async function openBillingPortal(): Promise<Result> {
+  if (!(await requireFamilyManager()).allowed) return { error: "Só um perfil adulto pode fazer isso." }
   const account = await requireAccount()
   if (isDemoMode || !isStripeConfigured) {
     return { error: "O portal de pagamento fica disponível após configurar o Stripe." }

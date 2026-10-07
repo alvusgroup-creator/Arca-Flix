@@ -14,7 +14,7 @@ import { resetSchema, type ResetInput } from "@/features/auth/schemas"
 import { changeEmail, changePassword, updateName } from "../actions"
 import { SettingsCard } from "./settings-card"
 
-const nameSchema = z.object({ fullName: z.string().trim().min(2, "Informe o seu nome.").max(60) })
+const nameSchema = z.object({ fullName: z.string().trim().min(2, "Informe seu nome.").max(60) })
 const emailSchema = z.object({ email: z.string().trim().email("E-mail inválido.") })
 
 function notify(res: { error?: string; success?: string }) {
@@ -49,7 +49,7 @@ export function AccountForms({ fullName, email }: { fullName: string; email: str
           <div className="flex-1 space-y-1.5">
             <Label htmlFor="fullName" className="sr-only">Nome</Label>
             <Input id="fullName" autoComplete="name" aria-invalid={Boolean(nameForm.formState.errors.fullName)} {...nameForm.register("fullName")} />
-            {nameForm.formState.errors.fullName && <p className="text-xs text-red-300">{nameForm.formState.errors.fullName.message}</p>}
+            {nameForm.formState.errors.fullName && <p className="text-xs text-red-700">{nameForm.formState.errors.fullName.message}</p>}
           </div>
           <Submit pending={pending}>Salvar</Submit>
         </form>
@@ -64,7 +64,7 @@ export function AccountForms({ fullName, email }: { fullName: string; email: str
           <div className="flex-1 space-y-1.5">
             <Label htmlFor="account-email" className="sr-only">E-mail</Label>
             <Input id="account-email" type="email" autoComplete="email" aria-invalid={Boolean(emailForm.formState.errors.email)} {...emailForm.register("email")} />
-            {emailForm.formState.errors.email && <p className="text-xs text-red-300">{emailForm.formState.errors.email.message}</p>}
+            {emailForm.formState.errors.email && <p className="text-xs text-red-700">{emailForm.formState.errors.email.message}</p>}
           </div>
           <Submit pending={pending}>Alterar e-mail</Submit>
         </form>
@@ -85,12 +85,12 @@ export function AccountForms({ fullName, email }: { fullName: string; email: str
           <div className="space-y-1.5">
             <Label htmlFor="new-password">Nova senha</Label>
             <PasswordInput id="new-password" autoComplete="new-password" {...passwordForm.register("password")} />
-            {passwordForm.formState.errors.password && <p className="text-xs text-red-300">{passwordForm.formState.errors.password.message}</p>}
+            {passwordForm.formState.errors.password && <p className="text-xs text-red-700">{passwordForm.formState.errors.password.message}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="confirm-password">Confirmar</Label>
             <PasswordInput id="confirm-password" autoComplete="new-password" {...passwordForm.register("confirm")} />
-            {passwordForm.formState.errors.confirm && <p className="text-xs text-red-300">{passwordForm.formState.errors.confirm.message}</p>}
+            {passwordForm.formState.errors.confirm && <p className="text-xs text-red-700">{passwordForm.formState.errors.confirm.message}</p>}
           </div>
           <div className="sm:col-span-2">
             <Submit pending={pending}>Alterar senha</Submit>
