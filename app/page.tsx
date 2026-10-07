@@ -3,6 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import {
+  ArrowRight,
   BadgeCheck,
   BookOpen,
   Check,
@@ -67,6 +68,18 @@ const steps = [
   { title: "Dê o play", text: "Monte o perfil de cada filho e comece a assistir." },
 ]
 
+/** CTA no fim de cada dobra. */
+function SectionCta({ href = "/register", label, note, className }: { href?: string; label: string; note?: string; className?: string }) {
+  return (
+    <div className={cn("flex flex-col items-center gap-3 text-center", className)}>
+      <Link href={href} className={cn(buttonVariants({ size: "lg" }), "h-13 w-full px-8 text-base sm:w-auto")}>
+        {label} <ArrowRight data-icon="inline-end" aria-hidden="true" />
+      </Link>
+      {note && <p className="text-sm text-muted-foreground">{note}</p>}
+    </div>
+  )
+}
+
 function cheapestMonthly(plans: { billingInterval: string; priceCents: number }[]) {
   const min = Math.min(...plans.filter((p) => p.billingInterval === "month").map((p) => p.priceCents))
   return Number.isFinite(min) ? min : undefined
@@ -90,7 +103,7 @@ export default async function LandingPage() {
 
         <PublicHeader signedIn={false} tone="onDark" />
 
-        <div className="page-x flex flex-1 items-end pt-[38svh] pb-24 md:items-center md:pt-10 md:pb-32">
+        <div className="shell flex flex-1 items-end pt-[38svh] pb-24 md:items-center md:pt-10 md:pb-32">
           <div className="mx-auto w-full max-w-xl text-center md:mx-0 md:max-w-2xl md:text-left">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-1.5 text-[0.72rem] font-bold tracking-[0.14em] text-white uppercase backdrop-blur-sm">
               <span className="size-1.5 rounded-full bg-sun-400" aria-hidden="true" />
@@ -117,8 +130,8 @@ export default async function LandingPage() {
       </section>
 
       {/* ------------------------------------------- Faixa de benefícios (sobreposta) */}
-      <div className="page-x relative z-10 -mt-16 md:-mt-14">
-        <ul className="mx-auto grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-2xl bg-grape-900/10 shadow-soft-lg lg:grid-cols-4">
+      <div className="shell relative z-10 -mt-16 md:-mt-14">
+        <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-lilac-100 shadow-soft-lg lg:grid-cols-4">
           {benefits.map(({ icon: Icon, title, text }) => (
             <li key={title} className="flex flex-col gap-2 bg-white p-4 sm:flex-row sm:items-start sm:gap-3 sm:p-5">
               <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-lilac-100 text-grape-600">
@@ -146,7 +159,7 @@ export default async function LandingPage() {
             text="Do desenho depois da escola ao salmo antes de dormir — tudo num só lugar."
           />
         </div>
-        <ul className="scrollbar-none mt-12 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 md:mx-auto md:grid md:max-w-6xl md:grid-cols-2 md:gap-x-6 md:gap-y-10 md:overflow-visible lg:grid-cols-4 lg:gap-5">
+        <ul className="scrollbar-none mt-12 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 md:mx-auto md:grid md:max-w-(--shell-max) md:grid-cols-2 md:gap-x-6 md:gap-y-10 md:overflow-visible lg:grid-cols-4 lg:gap-5">
           {moments.map(({ icon: Icon, label, title, text, image }) => (
             <li key={title} className="reveal w-[78vw] shrink-0 snap-start sm:w-[46vw] md:w-auto">
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-grape-900 md:aspect-[16/11] lg:aspect-[4/5]">
@@ -160,6 +173,7 @@ export default async function LandingPage() {
             </li>
           ))}
         </ul>
+        <SectionCta label="Quero isso para minha família" note="Cancele quando quiser · Sem fidelidade" className="page-x mt-12" />
       </section>
 
       {/* ------------------------------------------------------ Já no catálogo */}
@@ -172,7 +186,7 @@ export default async function LandingPage() {
               text="Tudo com classificação indicativa — e novos títulos chegando sempre."
             />
           </div>
-          <ul className="scrollbar-none mt-10 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 lg:mx-auto lg:grid lg:max-w-6xl lg:grid-cols-4 lg:gap-5 lg:overflow-visible">
+          <ul className="scrollbar-none mt-10 flex snap-x snap-mandatory scroll-px-(--page-x) gap-4 overflow-x-auto px-(--page-x) pb-2 lg:mx-auto lg:grid lg:max-w-(--shell-max) lg:grid-cols-4 lg:gap-5 lg:overflow-visible">
             {showcase.map((item) => (
               <li key={item.id} className="w-[62vw] shrink-0 snap-start sm:w-[38vw] lg:w-auto">
                 <Link href="/register" className="group block">
@@ -185,12 +199,13 @@ export default async function LandingPage() {
               </li>
             ))}
           </ul>
+          <SectionCta label="Assistir com meus filhos" note="Novos títulos chegando sempre" className="page-x mt-10" />
         </section>
       )}
 
       {/* ------------------------------------------------------- Pais no controle */}
       <section className="bg-white py-20 md:py-28" aria-labelledby="pais">
-        <div className="page-x mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:gap-16">
+        <div className="shell grid items-center gap-10 md:grid-cols-2 md:gap-16">
           <div className="reveal relative aspect-[4/3] overflow-hidden rounded-2xl bg-grape-900 md:aspect-[5/6]">
             <Image src={IMG.parents} alt="" fill sizes="(min-width: 768px) 45vw, 100vw" className="object-cover" />
           </div>
@@ -215,13 +230,14 @@ export default async function LandingPage() {
                 </li>
               ))}
             </ul>
+            <SectionCta label="Criar o perfil das crianças" className="mt-9 md:items-start" />
           </div>
         </div>
       </section>
 
       {/* --------------------------------------------------------- Como funciona */}
       <section className="py-20 md:py-28" aria-labelledby="como">
-        <div className="page-x mx-auto max-w-6xl">
+        <div className="shell">
           <SectionHeader
             pill="Como funciona"
             title={<span id="como">Pronto em três passos</span>}
@@ -240,13 +256,14 @@ export default async function LandingPage() {
               </li>
             ))}
           </ol>
+          <SectionCta label="Começar agora" note="Sem instalar nada · Funciona no navegador" className="mt-12" />
         </div>
       </section>
 
       {/* ---------------------------------------------------------------- Planos */}
       {plans.length > 0 && (
         <section id="planos" className="scroll-mt-6 bg-white py-20 md:py-28" aria-labelledby="planos-titulo">
-          <div className="page-x mx-auto max-w-6xl">
+          <div className="shell">
             <SectionHeader
               pill="Planos"
               title={<span id="planos-titulo">Escolha o plano da sua família</span>}
@@ -279,13 +296,14 @@ export default async function LandingPage() {
           <div className="mt-10">
             <Faq profilesByPlan={plans.map((p) => `${p.name}: até ${p.maxProfiles}`).join(" · ")} />
           </div>
+          <SectionCta href="#planos" label="Escolher meu plano" note="Pagamento seguro · Cancele quando quiser" className="mt-12" />
         </div>
       </section>
 
       {/* -------------------------------------------------------------- CTA final */}
-      <section className="page-x pb-20 md:pb-28">
-        <div className="relative isolate mx-auto max-w-6xl overflow-hidden rounded-2xl bg-grape-900">
-          <Image src={IMG.cta} alt="" fill sizes="(min-width: 1152px) 1152px, 100vw" className="-z-20 object-cover" />
+      <section className="shell pb-20 md:pb-28">
+        <div className="relative isolate overflow-hidden rounded-2xl bg-grape-900">
+          <Image src={IMG.cta} alt="" fill sizes="(min-width: 1360px) 1360px, 100vw" className="-z-20 object-cover" />
           <div className="veil absolute inset-0 -z-10" />
           <div className="mx-auto max-w-xl px-6 py-16 text-center md:py-24">
             <h2 className="text-[2rem] leading-[1.1] font-bold text-white sm:text-[2.75rem]">
@@ -303,7 +321,7 @@ export default async function LandingPage() {
 
       {/* ----------------------------------------------------------------- Rodapé */}
       <footer className="border-t border-grape-900/10 bg-white">
-        <div className="page-x mx-auto flex max-w-6xl flex-col items-center gap-5 py-10 text-center text-sm text-muted-foreground md:flex-row md:justify-between md:text-left">
+        <div className="shell flex flex-col items-center gap-5 py-10 text-center text-sm text-muted-foreground md:flex-row md:justify-between md:text-left">
           <Logo className="text-base" iconClassName="h-8" />
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2">
             <Link href="#planos" className="hover:text-grape-700">Planos</Link>

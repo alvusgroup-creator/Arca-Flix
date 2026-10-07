@@ -134,6 +134,7 @@
   --topbar-h: 64px;
   --mobile-nav-h: 64px;
   --page-x: 16px;
+  --shell-max: calc(85rem + 2 * var(--page-x));
 }
 
 @media (min-width: 768px) {
@@ -187,6 +188,13 @@
 
 @layer utilities {
   .page-x {
+    padding-inline: var(--page-x);
+  }
+  /* Largura padrão das páginas públicas (a mesma da hero). */
+  .shell {
+    width: 100%;
+    max-width: var(--shell-max);
+    margin-inline: auto;
     padding-inline: var(--page-x);
   }
   .scrollbar-none {

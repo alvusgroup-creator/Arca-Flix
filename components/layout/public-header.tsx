@@ -15,7 +15,7 @@ export function PublicHeader({
 }) {
   const dark = tone === "onDark"
   return (
-    <header className={cn("page-x flex h-18 items-center justify-between gap-4", className)}>
+    <header className={cn("shell flex h-18 items-center justify-between gap-4", className)}>
       <Link href="/" aria-label="Arca Flix — página inicial">
         <Logo tone={tone} className="text-lg sm:text-xl" iconClassName="h-9 sm:h-10" />
       </Link>
