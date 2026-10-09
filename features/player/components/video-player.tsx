@@ -45,21 +45,36 @@ export interface VideoPlayerProps {
   next: { href: string; title: string } | null
   autoplayNext: boolean
   captionsByDefault: boolean
+  /** Catálogo provisório: toca o vídeo do YouTube com os mesmos controles. */
+  youtubeId?: string
 }
 
 const SAVE_EVERY_MS = 10_000
 const HIDE_CONTROLS_MS = 3_000
 const NEXT_COUNTDOWN = 8
 
+/** O que os controles precisam da mídia — atendido pelo <video> e pelo adaptador do YouTube. */
+interface Media {
+  readonly paused: boolean
+  currentTime: number
+  readonly duration: number
+  muted: boolean
+  volume: number
+  play(): Promise<void>
+  pause(): void
+}
+
 /**
  * Player HLS próprio (Bunny Stream). Usa HLS nativo no Safari e hls.js nos
  * restantes navegadores — carregado só quando o player abre.
  */
 export function VideoPlayer(props: VideoPlayerProps) {
-  const { src, poster, title, subtitle, captions, contentId, episodeId, startAt, backHref, next } = props
+  const { src, poster, title, subtitle, captions, contentId, episodeId, startAt, backHref, next, youtubeId } = props
   const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const ytHostRef = useRef<HTMLDivElement>(null)
+  const mediaRef = useRef<Media | null>(null)
   const hlsRef = useRef<Hls | null>(null)
   const lastSaved = useRef(0)
   const hideTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -82,7 +97,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
   // --- Progresso ---------------------------------------------------------
   const persist = useCallback(
     (force = false) => {
-      const v = videoRef.current
+      const v = mediaRef.current
       if (!v || !v.duration || Number.isNaN(v.duration)) return
       const now = Date.now()
       if (!force && now - lastSaved.current < SAVE_EVERY_MS) return
@@ -94,13 +109,14 @@ export function VideoPlayer(props: VideoPlayerProps) {
         durationSeconds: v.duration,
       })
     },
-    [contentId, episodeId]
+    [contentId, episodeId],
   )
 
   // --- Fonte (HLS) -------------------------------------------------------
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video || youtubeId) return
+    mediaRef.current = video
     let cancelled = false
 
     // Tenta tocar sozinho; se o navegador bloquear, tenta sem som; se ainda assim
@@ -137,7 +153,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
           setLevels(
             data.levels
               .map((l, index) => ({ index, label: l.height ? `${l.height}p` : `${Math.round(l.bitrate / 1000)} kbps` }))
-              .reverse()
+              .reverse(),
           )
           tryPlay()
         })
@@ -153,7 +169,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
       hlsRef.current?.destroy()
       hlsRef.current = null
     }
-  }, [src, startAt])
+  }, [src, startAt, youtubeId])
 
   // Salva ao sair da página / esconder a aba.
   useEffect(() => {
@@ -185,14 +201,14 @@ export function VideoPlayer(props: VideoPlayerProps) {
 
   // --- Ações -------------------------------------------------------------
   const togglePlay = useCallback(() => {
-    const v = videoRef.current
+    const v = mediaRef.current
     if (!v) return
     if (v.paused) v.play().catch(() => undefined)
     else v.pause()
   }, [])
 
   const seekBy = useCallback((delta: number) => {
-    const v = videoRef.current
+    const v = mediaRef.current
     if (!v) return
     v.currentTime = Math.min(Math.max(0, v.currentTime + delta), v.duration || Infinity)
   }, [])
@@ -203,7 +219,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
   }, [])
 
   const toggleMute = useCallback(() => {
-    const v = videoRef.current
+    const v = mediaRef.current
     if (!v) return
     v.muted = !v.muted
   }, [])
@@ -212,7 +228,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
     setControlsVisible(true)
     clearTimeout(hideTimer.current)
     hideTimer.current = setTimeout(() => {
-      if (!videoRef.current?.paused) setControlsVisible(false)
+      if (!mediaRef.current?.paused) setControlsVisible(false)
     }, HIDE_CONTROLS_MS)
   }, [])
 
@@ -249,6 +265,102 @@ export function VideoPlayer(props: VideoPlayerProps) {
     return () => window.removeEventListener("keydown", onKey)
   }, [togglePlay, seekBy, toggleFullscreen, toggleMute, showControls])
 
+  // --- Fonte (YouTube) ---------------------------------------------------
+  // Mesmos controles do player próprio: o iframe fica sem controles e sem cliques,
+  // e o estado é lido por polling (a IFrame API não emite timeupdate).
+  const endedRef = useRef({ next, autoplayNext: props.autoplayNext })
+  useEffect(() => {
+    endedRef.current = { next, autoplayNext: props.autoplayNext }
+  }, [next, props.autoplayNext])
+
+  useEffect(() => {
+    const host = ytHostRef.current
+    if (!youtubeId || !host) return
+    let player: YTPlayer | null = null
+    let poll: ReturnType<typeof setInterval> | undefined
+    const timers: ReturnType<typeof setTimeout>[] = []
+    let cancelled = false
+
+    loadYouTubeApi().then((YT) => {
+      if (cancelled) return
+      const el = document.createElement("div")
+      host.appendChild(el)
+      player = new YT.Player(el, {
+        host: "https://www.youtube-nocookie.com",
+        videoId: youtubeId,
+        width: "100%",
+        height: "100%",
+        playerVars: {
+          controls: 0,
+          rel: 0,
+          playsinline: 1,
+          iv_load_policy: 3,
+          disablekb: 1,
+          fs: 0,
+          cc_load_policy: 0,
+          hl: "pt-BR",
+          start: startAt > 5 ? Math.floor(startAt) : 0,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: ({ target }) => {
+            mediaRef.current = youtubeMedia(target)
+            target.playVideo()
+            // Autoplay com som bloqueado: tenta sem som; senão mostra o botão de play.
+            timers.push(
+              setTimeout(() => {
+                if (target.getPlayerState() === 1) return
+                target.mute()
+                target.playVideo()
+                timers.push(setTimeout(() => setWaiting(false), 2000))
+              }, 1500),
+            )
+            poll = setInterval(() => {
+              const d = target.getDuration()
+              setCurrent(target.getCurrentTime())
+              setDuration(d)
+              setBuffered(target.getVideoLoadedFraction() * d)
+              setVolume(target.getVolume() / 100)
+              setMuted(target.isMuted())
+              persist()
+            }, 250)
+          },
+          onStateChange: ({ data, target }) => {
+            if (data === 1) {
+              // Legendas automáticas do YouTube ligam sozinhas: desliga.
+              target.unloadModule("captions")
+              setPlaying(true)
+              setWaiting(false)
+              setCountdown(null)
+              showControls()
+            } else if (data === 2) {
+              setPlaying(false)
+              setControlsVisible(true)
+              persist(true)
+            } else if (data === 3) {
+              setWaiting(true)
+            } else if (data === 0) {
+              setPlaying(false)
+              persist(true)
+              const { next: n, autoplayNext } = endedRef.current
+              if (n && autoplayNext) setCountdown(NEXT_COUNTDOWN)
+            }
+          },
+          onError: () => setError(true),
+        },
+      })
+    })
+
+    return () => {
+      cancelled = true
+      clearInterval(poll)
+      timers.forEach(clearTimeout)
+      player?.destroy()
+      host.replaceChildren()
+      mediaRef.current = null
+    }
+  }, [youtubeId, startAt, persist, showControls])
+
   const progress = duration ? (current / duration) * 100 : 0
   const visible = controlsVisible || !playing
 
@@ -259,50 +371,69 @@ export function VideoPlayer(props: VideoPlayerProps) {
       onMouseMove={showControls}
       onTouchStart={showControls}
     >
-      <video
-        ref={videoRef}
-        poster={poster}
-        playsInline
-        preload="none"
-        crossOrigin="anonymous"
-        className="absolute inset-0 size-full object-contain"
-        onClick={togglePlay}
-        onDoubleClick={toggleFullscreen}
-        onPlay={() => {
-          setPlaying(true)
-          setCountdown(null)
-          showControls()
-        }}
-        onPause={() => {
-          setPlaying(false)
-          setControlsVisible(true)
-          persist(true)
-        }}
-        onWaiting={() => setWaiting(true)}
-        onPlaying={() => setWaiting(false)}
-        onCanPlay={() => setWaiting(false)}
-        onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
-        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
-        onTimeUpdate={(e) => {
-          const v = e.currentTarget
-          setCurrent(v.currentTime)
-          if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1))
-          persist()
-        }}
-        onVolumeChange={(e) => {
-          setVolume(e.currentTarget.volume)
-          setMuted(e.currentTarget.muted)
-        }}
-        onEnded={() => {
-          persist(true)
-          if (next && props.autoplayNext) setCountdown(NEXT_COUNTDOWN)
-        }}
-        onError={() => setError(true)}
-      >
-        {captions.map((c, i) => (
-          <track key={c.src} kind="subtitles" src={c.src} srcLang={c.lang} label={c.label} default={i === 0 && captionsOn} />
-        ))}
-      </video>
+      {youtubeId ? (
+        <>
+          {/* O iframe não recebe cliques: os controles são os nossos. */}
+          <div
+            ref={ytHostRef}
+            className="pointer-events-none absolute inset-0 [&_iframe]:size-full"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0" onClick={togglePlay} onDoubleClick={toggleFullscreen} />
+        </>
+      ) : (
+        <video
+          ref={videoRef}
+          poster={poster}
+          playsInline
+          preload="none"
+          crossOrigin="anonymous"
+          className="absolute inset-0 size-full object-contain"
+          onClick={togglePlay}
+          onDoubleClick={toggleFullscreen}
+          onPlay={() => {
+            setPlaying(true)
+            setCountdown(null)
+            showControls()
+          }}
+          onPause={() => {
+            setPlaying(false)
+            setControlsVisible(true)
+            persist(true)
+          }}
+          onWaiting={() => setWaiting(true)}
+          onPlaying={() => setWaiting(false)}
+          onCanPlay={() => setWaiting(false)}
+          onLoadedMetadata={(e) => setDuration(e.currentTarget.duration)}
+          onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget
+            setCurrent(v.currentTime)
+            if (v.buffered.length) setBuffered(v.buffered.end(v.buffered.length - 1))
+            persist()
+          }}
+          onVolumeChange={(e) => {
+            setVolume(e.currentTarget.volume)
+            setMuted(e.currentTarget.muted)
+          }}
+          onEnded={() => {
+            persist(true)
+            if (next && props.autoplayNext) setCountdown(NEXT_COUNTDOWN)
+          }}
+          onError={() => setError(true)}
+        >
+          {captions.map((c, i) => (
+            <track
+              key={c.src}
+              kind="subtitles"
+              src={c.src}
+              srcLang={c.lang}
+              label={c.label}
+              default={i === 0 && captionsOn}
+            />
+          ))}
+        </video>
+      )}
 
       {waiting && !error && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
@@ -315,7 +446,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
           type="button"
           onClick={togglePlay}
           aria-label="Assistir"
-          className="absolute inset-0 z-[5] grid place-items-center bg-black/30"
+          className={cn("absolute inset-0 z-[5] grid place-items-center", youtubeId ? "bg-black/70" : "bg-black/30")}
         >
           <span className="grid size-20 place-items-center rounded-full bg-white text-grape-700 shadow-2xl transition-transform hover:scale-105 sm:size-24">
             <Play className="size-9 translate-x-0.5 fill-current sm:size-11" />
@@ -350,13 +481,22 @@ export function VideoPlayer(props: VideoPlayerProps) {
 
       {countdown !== null && next && (
         <div className="absolute right-6 bottom-28 z-20 w-72 rounded-3xl border border-white/10 bg-surface-1/95 p-5 shadow-2xl">
-          <p className="text-xs font-semibold tracking-wider text-lilac-400 uppercase">Próximo episódio em {countdown}s</p>
+          <p className="text-xs font-semibold tracking-wider text-lilac-400 uppercase">
+            Próximo episódio em {countdown}s
+          </p>
           <p className="mt-1 line-clamp-2 font-semibold">{next.title}</p>
           <div className="mt-4 flex gap-2">
-            <Link href={next.href} className="flex-1 rounded-full bg-grape-600 px-4 py-2 text-center text-sm font-bold hover:bg-grape-500">
+            <Link
+              href={next.href}
+              className="flex-1 rounded-full bg-grape-600 px-4 py-2 text-center text-sm font-bold hover:bg-grape-500"
+            >
               Assistir
             </Link>
-            <button type="button" onClick={() => setCountdown(null)} className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10">
+            <button
+              type="button"
+              onClick={() => setCountdown(null)}
+              className="rounded-full px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
               Cancelar
             </button>
           </div>
@@ -367,10 +507,14 @@ export function VideoPlayer(props: VideoPlayerProps) {
       <div
         className={cn(
           "absolute inset-x-0 top-0 z-10 flex items-center gap-3 bg-linear-to-b from-black/80 to-transparent p-4 transition-opacity duration-300 sm:p-6",
-          visible ? "opacity-100" : "pointer-events-none opacity-0"
+          visible ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
-        <Link href={backHref} aria-label="Voltar" className="grid size-11 place-items-center rounded-full hover:bg-white/15">
+        <Link
+          href={backHref}
+          aria-label="Voltar"
+          className="grid size-11 place-items-center rounded-full hover:bg-white/15"
+        >
           <ArrowLeft className="size-6" />
         </Link>
         <div className="min-w-0">
@@ -383,14 +527,17 @@ export function VideoPlayer(props: VideoPlayerProps) {
       <div
         className={cn(
           "absolute inset-x-0 bottom-0 z-10 space-y-3 bg-linear-to-t from-black/90 via-black/60 to-transparent px-4 pt-16 pb-4 transition-opacity duration-300 sm:px-6 sm:pb-6",
-          visible ? "opacity-100" : "pointer-events-none opacity-0"
+          visible ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
         <div className="flex items-center gap-3 text-xs text-white/80 tabular-nums">
           <span>{formatClock(current)}</span>
           <div className="group relative h-6 flex-1">
             <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-white/20 transition-[height] group-hover:h-2">
-              <div className="absolute inset-y-0 left-0 bg-white/30" style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }} />
+              <div
+                className="absolute inset-y-0 left-0 bg-white/30"
+                style={{ width: `${duration ? (buffered / duration) * 100 : 0}%` }}
+              />
               <div className="absolute inset-y-0 left-0 rounded-full bg-grape-500" style={{ width: `${progress}%` }} />
             </div>
             <input
@@ -402,7 +549,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
               aria-label="Progresso do vídeo"
               aria-valuetext={`${formatClock(current)} de ${formatClock(duration)}`}
               onChange={(e) => {
-                const v = videoRef.current
+                const v = mediaRef.current
                 if (v) v.currentTime = Number(e.target.value)
                 setCurrent(Number(e.target.value))
               }}
@@ -435,7 +582,7 @@ export function VideoPlayer(props: VideoPlayerProps) {
               value={muted ? 0 : volume}
               aria-label="Volume"
               onChange={(e) => {
-                const v = videoRef.current
+                const v = mediaRef.current
                 if (!v) return
                 v.volume = Number(e.target.value)
                 v.muted = v.volume === 0
@@ -455,13 +602,20 @@ export function VideoPlayer(props: VideoPlayerProps) {
               </Link>
             )}
             {captions.length > 0 && (
-              <ControlButton label={captionsOn ? "Desativar legendas (c)" : "Ativar legendas (c)"} onClick={() => setCaptionsOn((v) => !v)} active={captionsOn}>
+              <ControlButton
+                label={captionsOn ? "Desativar legendas (c)" : "Ativar legendas (c)"}
+                onClick={() => setCaptionsOn((v) => !v)}
+                active={captionsOn}
+              >
                 <Captions className="size-6" />
               </ControlButton>
             )}
             {levels.length > 1 && (
               <DropdownMenu>
-                <DropdownMenuTrigger aria-label="Qualidade" className="grid size-11 place-items-center rounded-full outline-none hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-lilac-400">
+                <DropdownMenuTrigger
+                  aria-label="Qualidade"
+                  className="grid size-11 place-items-center rounded-full outline-none hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-lilac-400"
+                >
                   <Settings className="size-6" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" align="end" className="w-40 p-1.5">
@@ -523,10 +677,102 @@ function ControlButton({
       className={cn(
         "grid place-items-center rounded-full outline-none transition-colors hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-lilac-400",
         big ? "size-13" : "size-11",
-        active && "text-lilac-400"
+        active && "text-lilac-400",
       )}
     >
       {children}
     </button>
   )
+}
+
+// ---------------------------------------------------------------------------
+// YouTube IFrame API (só o que o player usa)
+
+interface YTPlayer {
+  playVideo(): void
+  pauseVideo(): void
+  seekTo(seconds: number, allowSeekAhead: boolean): void
+  mute(): void
+  unMute(): void
+  isMuted(): boolean
+  setVolume(volume: number): void
+  getVolume(): number
+  getCurrentTime(): number
+  getDuration(): number
+  getVideoLoadedFraction(): number
+  getPlayerState(): number
+  unloadModule(name: string): void
+  destroy(): void
+}
+
+interface YTNamespace {
+  Player: new (
+    el: HTMLElement,
+    options: {
+      host?: string
+      videoId: string
+      width?: string
+      height?: string
+      playerVars?: Record<string, string | number>
+      events?: {
+        onReady?: (e: { target: YTPlayer }) => void
+        onStateChange?: (e: { data: number; target: YTPlayer }) => void
+        onError?: (e: { data: number }) => void
+      }
+    },
+  ) => YTPlayer
+}
+
+declare global {
+  interface Window {
+    YT?: YTNamespace
+    onYouTubeIframeAPIReady?: () => void
+  }
+}
+
+let ytApi: Promise<YTNamespace> | null = null
+
+function loadYouTubeApi() {
+  ytApi ??= new Promise((resolve) => {
+    if (window.YT?.Player) return resolve(window.YT)
+    window.onYouTubeIframeAPIReady = () => resolve(window.YT!)
+    const script = document.createElement("script")
+    script.src = "https://www.youtube.com/iframe_api"
+    document.head.appendChild(script)
+  })
+  return ytApi
+}
+
+function youtubeMedia(p: YTPlayer): Media {
+  return {
+    get paused() {
+      const state = p.getPlayerState()
+      return state !== 1 && state !== 3
+    },
+    get currentTime() {
+      return p.getCurrentTime()
+    },
+    set currentTime(t: number) {
+      p.seekTo(t, true)
+    },
+    get duration() {
+      return p.getDuration()
+    },
+    get muted() {
+      return p.isMuted()
+    },
+    set muted(m: boolean) {
+      if (m) p.mute()
+      else p.unMute()
+    },
+    get volume() {
+      return p.getVolume() / 100
+    },
+    set volume(v: number) {
+      p.setVolume(Math.round(v * 100))
+      if (v > 0) p.unMute()
+    },
+    play: async () => p.playVideo(),
+    pause: () => p.pauseVideo(),
+  }
 }

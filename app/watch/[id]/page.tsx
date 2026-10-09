@@ -91,6 +91,7 @@ export default async function WatchPage({ params }: PageProps<"/watch/[id]">) {
   return (
     <VideoPlayer
       src={source.src}
+      youtubeId={source.youtubeId}
       captions={source.captions}
       poster={episode?.thumbnailUrl || content.bannerUrl}
       title={content.title}

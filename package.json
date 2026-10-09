@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
     "db:seed:generate": "node scripts/generate-seed.mts",
+    "db:youtube": "node --env-file=.env.local scripts/import-youtube.mts",
+    "db:materials": "node --env-file=.env.local scripts/import-materials.mts",
     "stripe:sync": "node --env-file=.env.local scripts/stripe-sync-plans.mts",
     "stripe:listen": "node --env-file=.env.local scripts/stripe-listen.mjs"
   },

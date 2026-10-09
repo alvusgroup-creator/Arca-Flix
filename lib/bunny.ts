@@ -7,6 +7,8 @@ export interface VideoSource {
   src: string
   /** Legendas WebVTT opcionais. */
   captions: { src: string; label: string; lang: string }[]
+  /** Vídeo público do YouTube (catálogo provisório): o player usa o embed. */
+  youtubeId?: string
 }
 
 const TOKEN_TTL_SECONDS = 60 * 60 * 4
@@ -36,6 +38,8 @@ function signDirectory(videoId: string) {
  * Só deve ser chamada depois de verificar sessão e assinatura.
  */
 export function getVideoSource(videoId: string | null): VideoSource | null {
+  // video_id "yt:<id>": vídeo do YouTube (catálogo provisório para a campanha).
+  if (videoId?.startsWith("yt:")) return { src: "", captions: [], youtubeId: videoId.slice(3) }
   // Fase de validação (sem provedor de vídeo ligado): todos os títulos tocam o
   // stream de teste, para a experiência ficar completa. Com o Bunny configurado,
   // só toca quem tem video_id real.

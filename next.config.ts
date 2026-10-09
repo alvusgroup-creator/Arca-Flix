@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "*.supabase.co" },
       { protocol: "https", hostname: "*.b-cdn.net" },
+      // Capas do catálogo provisório do YouTube.
+      { protocol: "https", hostname: "i.ytimg.com" },
     ],
   },
 };
