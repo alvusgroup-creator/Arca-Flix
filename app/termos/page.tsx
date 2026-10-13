@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Termos de Uso" updatedAt="[data de publicação]">
+    <LegalPage title="Termos de Uso" updatedAt="13 de outubro de 2026">
       <p>
         Estes Termos regulam o uso do Arca Flix, serviço de streaming de conteúdo cristão para crianças e famílias,
-        oferecido por <strong>[Razão social]</strong>, inscrita no CNPJ <strong>[número]</strong>, com sede em{" "}
-        <strong>[endereço]</strong> (&ldquo;Arca Flix&rdquo;). Ao criar uma conta você declara ter 18 anos ou mais e
+        oferecido por <strong>66.554.010 Jonathan Fernandes</strong>, inscrita no CNPJ <strong>66.554.010/0001-87</strong>, com sede em{" "}
+        <strong>Rua Nelsom Leme Sampaio, 67, Jardim Concha de Ouro, Jaú/SP, CEP 17203-490</strong> (&ldquo;Arca Flix&rdquo;). Ao criar uma conta você declara ter 18 anos ou mais e
         concordar com estes Termos.
       </p>
 
@@ -53,7 +53,7 @@ export default function TermsPage() {
 
       <h2>6. Contato e foro</h2>
       <p>
-        Dúvidas: <strong>[e-mail de suporte]</strong>. Estes Termos seguem a legislação brasileira; fica eleito o foro do
+        Dúvidas: <strong>contato@arcaflix.com.br</strong>. Estes Termos seguem a legislação brasileira; fica eleito o foro do
         domicílio do consumidor.
       </p>
     </LegalPage>
