@@ -70,7 +70,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Tudo exceto assets estáticos e imagens.
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|brand/|demo/|icons/|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Tudo exceto assets estáticos, imagens e arquivos para robôs (robots, sitemap,
+    // verificação do Google Search Console).
+    "/((?!_next/static|_next/image|robots.txt|sitemap.xml|google[a-z0-9]+\.html|favicon.ico|icon.png|apple-icon.png|manifest.webmanifest|brand/|demo/|icons/|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 }
