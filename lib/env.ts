@@ -5,6 +5,8 @@ export const publicEnv = {
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
   stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "",
   appUrl: (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/$/, ""),
+  /** Botão "Entrar com Google": só aparece com NEXT_PUBLIC_GOOGLE_LOGIN=1 (provedor ligado no Supabase). */
+  googleLogin: process.env.NEXT_PUBLIC_GOOGLE_LOGIN === "1",
 }
 
 /**

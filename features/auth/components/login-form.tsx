@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { signIn } from "../actions"
 import { loginSchema, type LoginInput } from "../schemas"
 import { FieldError, FormMessage } from "./auth-card"
+import { publicEnv } from "@/lib/env"
 import { GoogleButton } from "./google-button"
 import { PasswordInput } from "./password-input"
 
@@ -74,10 +75,14 @@ export function LoginForm({ next }: { next?: string }) {
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-foreground/40" aria-hidden="true">
-        <span className="h-px flex-1 bg-grape-600/10" /> ou <span className="h-px flex-1 bg-grape-600/10" />
-      </div>
-      <GoogleButton next={next} />
+      {publicEnv.googleLogin && (
+        <>
+          <div className="flex items-center gap-3 text-xs text-foreground/40" aria-hidden="true">
+            <span className="h-px flex-1 bg-grape-600/10" /> ou <span className="h-px flex-1 bg-grape-600/10" />
+          </div>
+          <GoogleButton next={next} />
+        </>
+      )}
 
       <p className="text-center text-sm text-muted-foreground">
         Ainda não tem conta?{" "}

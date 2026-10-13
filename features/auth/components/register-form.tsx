@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { signUp } from "../actions"
 import { registerSchema, type RegisterInput } from "../schemas"
 import { FieldError, FormMessage } from "./auth-card"
+import { publicEnv } from "@/lib/env"
 import { GoogleButton } from "./google-button"
 import { PasswordInput } from "./password-input"
 
@@ -103,10 +104,14 @@ export function RegisterForm({ plan }: { plan?: { slug: string; label: string } 
         </p>
       </form>
 
-      <div className="flex items-center gap-3 text-xs text-foreground/40" aria-hidden="true">
-        <span className="h-px flex-1 bg-grape-600/10" /> ou <span className="h-px flex-1 bg-grape-600/10" />
-      </div>
-      <GoogleButton next="/plans?step=2" />
+      {publicEnv.googleLogin && (
+        <>
+          <div className="flex items-center gap-3 text-xs text-foreground/40" aria-hidden="true">
+            <span className="h-px flex-1 bg-grape-600/10" /> ou <span className="h-px flex-1 bg-grape-600/10" />
+          </div>
+          <GoogleButton next="/plans?step=2" />
+        </>
+      )}
 
       <p className="text-center text-sm text-muted-foreground">
         Já tem conta?{" "}
